@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organization Approval | CERT-IN</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Common CSS -->
+    <link rel="stylesheet" href="/static/userdashboard.css">
+</head>
+
+<body>
+
+<div class="container my-4">
+
+    <!-- Page Header -->
+    <div class="mb-4">
+        <h3 class="fw-bold">Organization Registration Requests</h3>
+        <p class="text-muted">
+            Review and approve organizations before granting system access
+        </p>
+    </div>
+
+    <!-- Organization Request Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light fw-semibold">
+            Organization Registration Request
+        </div>
+
+        <div class="card-body">
+
+            <!-- Organization Details -->
+            <h6 class="fw-bold mb-3">Organization Details</h6>
+
+            <div class="row mb-2">
+                <div class="col-md-4 fw-semibold">Organization Name</div>
+                <div class="col-md-8">State Bank of India</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4 fw-semibold">NIC Registration Number</div>
+                <div class="col-md-8">NIC-SBI-2025-1092</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4 fw-semibold">Official Domain</div>
+                <div class="col-md-8">sbi.co.in</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4 fw-semibold">Official Email</div>
+                <div class="col-md-8">security@sbi.co.in</div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4 fw-semibold">Submitted On</div>
+                <div class="col-md-8">18 Dec 2025, 09:30 AM</div>
+            </div>
+
+            <!-- Documents -->
+            <h6 class="fw-bold mb-3">Submitted Documents</h6>
+
+            <ul class="list-group mb-4">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    NIC Registration Certificate
+                    <button class="btn btn-sm btn-outline-primary">View</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Domain Ownership Proof
+                    <button class="btn btn-sm btn-outline-primary">View</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Authorization Letter
+                    <button class="btn btn-sm btn-outline-primary">View</button>
+                </li>
+            </ul>
+
+            <!-- Requesting User -->
+            <h6 class="fw-bold mb-3">Requesting User Details</h6>
+
+            <div class="row mb-2">
+                <div class="col-md-4 fw-semibold">User Name</div>
+                <div class="col-md-8">Amit Kumar</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4 fw-semibold">Designation</div>
+                <div class="col-md-8">IT Security Officer</div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4 fw-semibold">User Email</div>
+                <div class="col-md-8">amit.kumar@sbi.co.in</div>
+            </div>
+
+            <!-- Approval Toggle -->
+            <h6 class="fw-bold mb-3">Admin Decision</h6>
+
+            <div class="form-check form-switch mb-4">
+                <input class="form-check-input" type="checkbox" id="approvalToggle">
+                <label class="form-check-label fw-semibold" for="approvalToggle">
+                    Approve organization access
+                </label>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-3">
+                <button class="btn btn-success">Confirm Decision</button>
+                <button class="btn btn-outline-danger">Reject Request</button>
+            </div>
+
+            <p class="text-muted small mt-3">
+                * Once approved, the organization will gain access to the Organization Dashboard.
+            </p>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

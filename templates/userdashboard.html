@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard | Phishing Detection</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/userdashboard.css">
+</head>
+
+<body>
+
+<div class="d-flex">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="logo">PhishGuard AI</h2>
+        <nav>
+            <ul>
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Scan Services</a></li>
+                <li><a href="#">Scan History</a></li>
+                <li><a href="#">Reports</a></li>
+                <li><a href="#">Report Phishing</a></li>
+                <li><a href="#">Logout</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content container-fluid">
+
+        <!-- Header -->
+        <div class="header mb-4">
+            <h1>User Dashboard</h1>
+            <p class="text-muted">
+                Government-Grade AI/ML Phishing Detection System
+            </p>
+        </div>
+
+        <!-- Scan Services -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                Phishing Scan Services
+            </div>
+
+            <div class="card-body">
+                <div class="row g-4">
+
+                    <!-- URL Scan -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="scan-box">
+                            <h5>🌐 URL Scan</h5>
+                            <input type="text" class="form-control mb-2" placeholder="Enter website URL">
+                            <button class="btn btn-primary w-100">Scan URL</button>
+                        </div>
+                    </div>
+
+                    <!-- Email Scan -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="scan-box">
+                            <h5>📧 Email Scan</h5>
+                            <textarea class="form-control mb-2" rows="3" placeholder="Paste email content"></textarea>
+                            <button class="btn btn-primary w-100">Scan Email</button>
+                        </div>
+                    </div>
+
+                    <!-- QR Scan -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="scan-box">
+                            <h5>📷 QR Code Scan</h5>
+                            <input type="text" class="form-control mb-2" placeholder="Enter QR decoded URL">
+                            <button class="btn btn-primary w-100">Scan QR</button>
+                        </div>
+                    </div>
+
+                    <!-- SMS Scan -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="scan-box">
+                            <h5>💬 SMS / Message Scan</h5>
+                            <textarea class="form-control mb-2" rows="3" placeholder="Paste SMS or message"></textarea>
+                            <button class="btn btn-primary w-100">Scan Message</button>
+                        </div>
+                    </div>
+
+                    <!-- Domain Reputation -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="scan-box">
+                            <h5>🛡️ Domain Reputation</h5>
+                            <input type="text" class="form-control mb-2" placeholder="Enter domain name">
+                            <button class="btn btn-primary w-100">Check Reputation</button>
+                        </div>
+                    </div>
+
+                    <!-- Brand Impersonation -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="scan-box">
+                            <h5>🏷️ Brand Impersonation</h5>
+                            <input type="text" class="form-control mb-2" placeholder="Enter brand or domain">
+                            <button class="btn btn-primary w-100">Check Abuse</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                Phishing Detection Result
+            </div>
+            <div class="card-body">
+                <p><strong>Status:</strong> Safe</p>
+                <p><strong>Domain:</strong> example.com</p>
+                <p><strong>Risk Score:</strong> 12%</p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mb-4">
+            <button class="btn btn-outline-primary me-2">Download Report</button>
+            <button class="btn btn-outline-danger">Report to Organization</button>
+        </div>
+
+        <!-- Scan History -->
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                Scan History
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>URL / Email</th>
+                            <th>Status</th>
+                            <th>Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>18-12-2025</td>
+                            <td>secure-login-icici.in</td>
+                            <td class="text-danger">Phishing</td>
+                            <td>91%</td>
+                        </tr>
+                        <tr>
+                            <td>17-12-2025</td>
+                            <td>amazon.com</td>
+                            <td class="text-success">Safe</td>
+                            <td>5%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

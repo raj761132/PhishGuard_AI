@@ -5,5 +5,4 @@ __pycache__/
 instance/
 .vscode/
 *.log
-static/screenshots/
 reports/

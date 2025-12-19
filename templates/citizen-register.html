@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Registration - Official Cyber Portal</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gov-blue: #003366; /* Official Deep Blue */
+            --gov-orange: #FF9933; /* Saffron */
+            --gov-green: #138808; /* India Green */
+            --bg-light: #f4f7f6;
+        }
+        
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-light); }
+        h1, h2, h3, h4, h5 { font-family: 'Merriweather', serif; }
+
+        /* --- Top Tri-Color Bar --- */
+        .national-strip {
+            height: 6px;
+            background: linear-gradient(90deg, var(--gov-orange) 33%, #ffffff 33%, #ffffff 66%, var(--gov-green) 66%);
+        }
+
+        /* --- Navbar --- */
+        .gov-navbar { background-color: white; border-bottom: 1px solid #ddd; }
+        .logo-text { color: var(--gov-blue); font-weight: 700; }
+        .logo-sub { color: #666; font-size: 0.8rem; }
+
+        /* --- Split Layout Card --- */
+        .auth-container {
+            min-height: 80vh;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* --- Left Side (Rules) --- */
+        .info-panel {
+            background-color: var(--gov-blue);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Watermark effect */
+        .info-panel::before {
+            content: "\f19c"; /* FontAwesome University Icon */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            font-size: 300px;
+            opacity: 0.05;
+            color: white;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: start;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .rule-icon { margin-right: 15px; color: var(--gov-orange); margin-top: 3px; }
+
+        /* --- Form Styles --- */
+        .form-label { font-weight: 500; color: var(--gov-blue); font-size: 0.9rem; }
+        .form-control { border-radius: 4px; border: 1px solid #ced4da; padding: 10px; }
+        .form-control:focus { border-color: var(--gov-blue); box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.15); }
+        
+        .btn-gov {
+            background-color: var(--gov-blue);
+            color: white;
+            border-radius: 4px;
+            padding: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .btn-gov:hover { background-color: #002244; color: white; }
+
+        .password-meter { height: 4px; background: #e9ecef; border-radius: 2px; margin-top: 8px; }
+        .meter-fill { height: 100%; width: 0%; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div class="national-strip"></div>
+
+    <nav class="navbar gov-navbar py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" height="50" class="me-3" alt="Emblem">
+                <div class="d-flex flex-column">
+                    <span class="logo-text text-uppercase">National Cyber Security Portal</span>
+                    <span class="logo-sub">Government of India | Ministry of Electronics & IT</span>
+                </div>
+            </a>
+            <div class="d-none d-md-block text-end">
+                <span class="badge bg-light text-dark border"><i class="fas fa-lock me-1"></i> Secure Connection</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="row auth-container">
+                    
+                    <div class="col-md-5 info-panel p-5 d-flex flex-column justify-content-center">
+                        <h3 class="mb-4 fw-bold">Citizen Guidelines</h3>
+                        <p class="mb-4 opacity-75 small">Access to this portal is restricted to verified citizens. By registering, you agree to the following mandates:</p>
+                        
+                        <div class="rule-item">
+                            <i class="fas fa-id-card rule-icon"></i>
+                            <span><strong>Identity Verification:</strong> Your account must be linked to a valid email address. An OTP will be sent for verification.</span>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <i class="fas fa-user-shield rule-icon"></i>
+                            <span><strong>Account Security:</strong> You are responsible for maintaining the confidentiality of your password and OTP.</span>
+                        </div>
+
+                        <div class="rule-item">
+                            <i class="fas fa-gavel rule-icon"></i>
+                            <span><strong>Legal Compliance:</strong> False reporting of cyber incidents is a punishable offense under the IT Act, 2000.</span>
+                        </div>
+
+                        <div class="mt-auto pt-4 border-top border-white border-opacity-25">
+                            <small class="d-block"><i class="fas fa-headset me-2"></i> Helpline: 1930</small>
+                            <small><i class="fas fa-envelope me-2"></i> support@cybercrime.gov.in</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-7 bg-white p-5">
+                        <div class="text-center mb-4">
+                            <h4 class="fw-bold text-dark">Citizen Registration</h4>
+                            <p class="text-muted small">Enter your details to generate a verification OTP.</p>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('register_citizen') }}">
+                            
+                            <input type="hidden" name="role" value="citizen">
+
+                            <div class="mb-3">
+                                <label class="form-label">Full Legal Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fas fa-user text-muted"></i></span>
+                                    <input type="text" name="full_name" class="form-control" placeholder="As per official ID" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fas fa-phone text-muted"></i></span>
+                                    <input type="tel" name="phone" class="form-control" placeholder="+91 XXXXX XXXXX" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fas fa-envelope text-muted"></i></span>
+                                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                                </div>
+                                <div class="form-text small text-success"><i class="fas fa-check-circle me-1"></i> We will send an OTP to this email.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Create Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fas fa-lock text-muted"></i></span>
+                                    <input type="password" name="password" id="regPass" class="form-control" placeholder="Min. 8 characters" onkeyup="checkStrength()" required>
+                                </div>
+                                <div class="password-meter"><div id="meterFill" class="meter-fill"></div></div>
+                                <small id="strengthText" class="text-muted" style="font-size: 0.75rem;">Weak</small>
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" required>
+                                <label class="form-check-label small text-muted">
+                                    I hereby declare that the information furnished above is true and I agree to the <a href="#" class="text-decoration-none fw-bold">Terms of Service</a>.
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-gov w-100 shadow-sm">
+                                Verify & Register <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-4 pt-3 border-top">
+                            <small class="text-muted">Already have a Citizen ID? <a href="{{ url_for('login_citizen') }}" class="fw-bold text-dark">Login here</a></small>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password Strength Logic
+        function checkStrength() {
+            const password = document.getElementById('regPass').value;
+            const meter = document.getElementById('meterFill');
+            const text = document.getElementById('strengthText');
+            let strength = 0;
+            if (password.length > 5) strength++;
+            if (password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[$@#&!]/)) strength++;
+            const colors = ["#dc3545", "#dc3545", "#ffc107", "#0d6efd", "#198754"];
+            const labels = ["Weak", "Weak", "Moderate", "Strong", "Very Strong"];
+            meter.style.width = (strength * 25) + "%";
+            meter.style.backgroundColor = colors[strength];
+            text.innerText = labels[strength];
+            text.style.color = colors[strength];
+        }
+    </script>
+
+</body>
+</html>

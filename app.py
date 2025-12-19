@@ -58,7 +58,7 @@ class User(UserMixin, db.Document):
     role = db.StringField(required=True) # 'citizen', 'org', 'admin'
     created_at = db.DateTimeField(default=datetime.datetime.utcnow)
     is_verified = db.BooleanField(default=False)
-    is_approved = db.BooleanField(default=False) 
+    is_approved = db.BooleanField(default=False)
 
     # Citizen Fields
     full_name = db.StringField()
@@ -98,6 +98,10 @@ def load_user(user_id):
 def home():
     return render_template('index.html')
 
+@app.route('/blocked-urls')
+def blocked_urls():
+    return render_template('blocklist.html')
+
 # ---------------------------------------------------
 #  A. CITIZEN ROUTES
 # ---------------------------------------------------
@@ -107,7 +111,13 @@ def register_citizen():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
+        accept_terms = request.form.get('accept_terms')
         role = 'citizen'
+
+        # 🔒 Terms & Conditions validation
+        if not accept_terms:
+            flash('You must accept the Terms & Conditions to register.', 'danger')
+            return redirect(url_for('register_citizen'))
 
         existing_user = User.objects(email=email).first()
         if existing_user:
@@ -125,27 +135,37 @@ def register_citizen():
             otp_expiry=expiry,
             is_verified=False,
             full_name=request.form.get('full_name'),
-            phone=request.form.get('phone')
+            phone=request.form.get('phone'),
+            terms_accepted=True,              # ✅ Optional DB field
+            terms_accepted_at=datetime.datetime.utcnow()
         )
 
         try:
             new_user.save()
-            
-            msg = Message('Your OTP Verification Code', 
-                          sender='noreply@cyberportal.gov', 
-                          recipients=[email])
-            msg.body = f"Your Code: {otp}"
+
+            msg = Message(
+                'Your OTP Verification Code',
+                sender='noreply@cyberportal.gov',
+                recipients=[email]
+            )
+            msg.body = f"Your OTP Code: {otp}"
             mail.send(msg)
-            
+
             session['email_to_verify'] = email
             flash('Registration successful! Please verify OTP.', 'info')
             return redirect(url_for('verify_otp'))
-            
+
         except Exception as e:
             flash(f'Error: {str(e)}', 'danger')
             return redirect(url_for('register_citizen'))
 
     return render_template('citizen-register.html')
+
+
+@app.route('/terms-and-conditions')
+def terms_and_conditions():
+    return render_template('terms-and-conditions.html')
+
 
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
@@ -170,6 +190,8 @@ def verify_otp():
             flash('Invalid or Expired OTP', 'danger')
 
     return render_template('otp-verify.html')
+
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_citizen():

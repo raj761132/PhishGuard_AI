@@ -1,13 +1,16 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from flask_mongoengine import MongoEngine
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 import datetime
 from datetime import timedelta
 import random
+
+# --- IMPORT DATABASE LOGIC ---
+# Ensure db.py is in the same folder
+from db import db, User
 
 # ==========================================
 # 1. SETUP & CONFIGURATION
@@ -16,7 +19,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hackathon-secret-key-change-this'
 
 # --- FILE UPLOAD CONFIG ---
-# Ensure this folder exists or the code will create it
 UPLOAD_FOLDER = 'static/uploads/kyc_docs'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True) 
@@ -37,61 +39,20 @@ app.config['MONGODB_SETTINGS'] = {
     'port': 27017
 }
 
-db = MongoEngine(app)
+# --- INITIALIZE DB ---
+db.init_app(app)
 
 # --- LOGIN MANAGER ---
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login_citizen'
 
-# ==========================================
-# 2. DATABASE MODEL (FIXED)
-# ==========================================
-class User(UserMixin, db.Document):
-    meta = {
-        'collection': 'users',
-        'strict': False  # <--- CRITICAL FIX: Ignores old/unknown fields in DB to prevent crashes
-    }
-
-    email = db.StringField(required=True, unique=True)
-    password_hash = db.StringField(required=True)
-    role = db.StringField(required=True) # 'citizen', 'org', 'admin'
-    created_at = db.DateTimeField(default=datetime.datetime.utcnow)
-    is_verified = db.BooleanField(default=False)
-    is_approved = db.BooleanField(default=False) 
-
-    # Citizen Fields
-    full_name = db.StringField()
-    phone = db.StringField()
-
-    # Organization Fields
-    org_name = db.StringField()
-    category = db.StringField()
-    cin = db.StringField()
-    designation = db.StringField()
-    
-    # KYC Documents (File Paths)
-    auth_doc_path = db.StringField()
-    incorp_doc_path = db.StringField()
-
-    # Legacy Fields (Kept to prevent errors if they exist in DB)
-    access_level = db.IntField(default=1) 
-    company_domain = db.StringField()
-    department_name = db.StringField()
-
-    # OTP Logic
-    otp_code = db.StringField(max_length=6)
-    otp_expiry = db.DateTimeField()
-
-    def get_id(self):
-        return str(self.id)
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 # ==========================================
-# 3. ROUTES & LOGIC
+# 2. ROUTES & LOGIC
 # ==========================================
 
 @app.route('/')
@@ -197,15 +158,13 @@ def login_citizen():
     return render_template('login-citizen.html')
 
 # ---------------------------------------------------
-#  B. ORGANIZATION ROUTES (FIXED ENDPOINTS)
+#  B. ORGANIZATION ROUTES
 # ---------------------------------------------------
 
-# FIXED: Renamed function to 'register_org' to match url_for('register_org') in index.html
 @app.route('/register-org')
 def register_org():
     return render_template('org-register.html')
 
-# 1. AJAX: Send OTP to Organization Email
 @app.route('/send-otp-org', methods=['POST'])
 def send_otp_org():
     data = request.get_json()
@@ -226,7 +185,6 @@ def send_otp_org():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
-# 2. AJAX: Verify OTP
 @app.route('/verify-otp-org', methods=['POST'])
 def verify_otp_org():
     data = request.get_json()
@@ -239,15 +197,12 @@ def verify_otp_org():
     else:
         return jsonify({'success': False, 'message': 'Invalid OTP'})
 
-# 3. AJAX: Final Registration Submission
-# Note: This shares the URL /register-org but uses POST method
 @app.route('/register-org', methods=['POST'])
 def register_org_submit():
     if not session.get('org_verified'):
         return jsonify({'error': 'Email verification required'}), 400
 
     try:
-        # Get Form Data
         org_name = request.form.get('org_name')
         category = request.form.get('category')
         cin = request.form.get('cin')
@@ -256,7 +211,6 @@ def register_org_submit():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        # Handle File Uploads
         auth_file = request.files.get('auth_letter')
         incorp_file = request.files.get('incorp_cert')
 
@@ -273,7 +227,6 @@ def register_org_submit():
             incorp_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{cin}_incorp_{filename}")
             incorp_file.save(incorp_path)
 
-        # Create User
         new_org = User(
             email=email,
             password_hash=generate_password_hash(password),
@@ -290,7 +243,6 @@ def register_org_submit():
         )
         new_org.save()
 
-        # Clean session
         session.pop('org_otp', None)
         session.pop('org_email', None)
         session.pop('org_verified', None)
@@ -330,19 +282,75 @@ def login_official():
     return render_template('login-official.html')
 
 # ---------------------------------------------------
-#  C. SHARED & ADMIN ROUTES
+#  C. ADMIN & APPROVAL ROUTES (CRITICAL FIXES HERE)
 # ---------------------------------------------------
 
 @app.route('/admin-login', methods=['GET', 'POST'])
 def login_admin():
     if request.method == 'POST':
-        flash('Admin Dashboard access granted (Mock).', 'success')
-        return redirect(url_for('dashboard'))
+        # NOTE: Add actual password logic here if needed
+        flash('Admin Dashboard access granted.', 'success')
+        return redirect(url_for('admin_dashboard'))
+        
     return render_template('login-admin.html')
+
+@app.route('/admin-dashboard')
+@login_required
+def admin_dashboard():
+    # 1. Fetch only organizations that are NOT approved yet
+    pending_orgs = User.objects(role='org', is_approved=False)
+    
+    # 2. Pass this list to the HTML file
+    return render_template('admin_dashboard.html', pending_orgs=pending_orgs)
+
+@app.route('/approve-org/<user_id>')
+@login_required
+def approve_org(user_id):
+    # Find user by ID
+    user = User.objects(pk=user_id).first()
+    
+    if user:
+        user.is_approved = True
+        user.save()
+        
+        # Optional: Send approval email
+        try:
+            msg = Message('Account Approved', sender='noreply@cyberportal.gov', recipients=[user.email])
+            msg.body = "Your organization account has been approved. You may now login."
+            mail.send(msg)
+        except Exception:
+            pass # Continue even if email fails
+            
+        flash(f'Organization {user.org_name} has been approved!', 'success')
+    else:
+        flash('User not found.', 'danger')
+        
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/reject-org/<user_id>')
+@login_required
+def reject_org(user_id):
+    user = User.objects(pk=user_id).first()
+    if user:
+        user.delete() # Simply delete the request
+        flash('Organization request rejected/deleted.', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
+# ---------------------------------------------------
+#  D. SHARED ROUTES
+# ---------------------------------------------------
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # Smart Redirection based on role
+    if current_user.role == 'org':
+        return redirect(url_for('org_dashboard'))
+    
+    # If you have a way to identify admin role in DB, add it here:
+    # if current_user.role == 'admin':
+    #     return redirect(url_for('admin_dashboard'))
+        
     return render_template('userdashboard.html', user=current_user)
 
 @app.route('/ORG-dashboard')

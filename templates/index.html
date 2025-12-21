@@ -55,18 +55,28 @@
                     <h1 class="text-lg font-bold tracking-wide uppercase">PhishGuard AI</h1>
                 </div>
             </div>
+        </div>
+    </header>
 
-            <div class="hidden md:flex space-x-8 items-center">
-                <a href="#" class="hover:text-blue-300 text-sm font-medium transition">Home</a>
-                <a href="#how-it-works" class="hover:text-blue-300 text-sm font-medium transition">How It Works</a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-gov-blue sticky-top shadow-sm" style="background-color: #003366;">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="#">Scanner</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Report Fraud</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Blacklisted URLs</a></li>
+                </ul>
                 
-                <div class="relative group">
-                    <button onclick="toggleLiveStats()" class="hover:text-blue-300 text-sm font-medium transition flex items-center gap-2 focus:outline-none">
-                        <span class="relative flex h-2.5 w-2.5">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                        </span>
-                        Live Status
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-white small me-3 d-none d-lg-block">
+                        <i class="fas fa-phone-alt me-1"></i> 1930
+                    </span>
+                    
+                    <button class="btn btn-outline-light btn-sm text-uppercase fw-bold px-3" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
                     </button>
 
                     <div id="liveStatsWindow" class="hidden absolute top-14 -right-20 w-80 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 transform transition-all duration-200">

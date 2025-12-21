@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blocked Phishing URLs | Cyber Safety Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #e9f5fb;
+        }
+        .header-bar {
+            background-color: #42b9f5;
+            color: white;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .content-box {
+            background: #ffffff;
+            border: 2px solid #2c3e50;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .section-title {
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+        }
+        .risk-high {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .risk-medium {
+            color: #fd7e14;
+            font-weight: bold;
+        }
+        .footer-note {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header-bar text-center">
+    Cyber Safety Portal – Blocked Phishing URL Report
+</div>
+
+<div class="container">
+
+    <div class="content-box">
+
+        <h5 class="section-title">Detection Reference Details</h5>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p><strong>Report ID :</strong> CSP-PH-2025-00421</p>
+                <p><strong>Scan Date :</strong> 28-12-2025</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Detected By :</strong> AI Phishing Detection Engine</p>
+                <p><strong>Status :</strong> <span class="risk-high">Blocked</span></p>
+            </div>
+        </div>
+
+        <h5 class="section-title">Blocked / Blacklisted URLs</h5>
+
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>URL / Domain</th>
+                        <th>Impersonated Brand</th>
+                        <th>Reason</th>
+                        <th>Risk Level</th>
+                        <th>Detected On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>https://sbi-login-secure[.]com</td>
+                        <td>SBI Bank</td>
+                        <td>Fake login page & brand impersonation</td>
+                        <td class="risk-high">High</td>
+                        <td>28-12-2025</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>https://irctc-verify-ticket[.]net</td>
+                        <td>IRCTC</td>
+                        <td>Recently registered domain (2 days old)</td>
+                        <td class="risk-high">High</td>
+                        <td>27-12-2025</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>https://gov-login-update[.]org</td>
+                        <td>Government Portal</td>
+                        <td>Suspicious keywords & SSL mismatch</td>
+                        <td class="risk-medium">Medium</td>
+                        <td>26-12-2025</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h5 class="section-title">User Advisory</h5>
+        <p>
+            The above websites have been identified as <strong>malicious or suspicious</strong>.
+            Citizens are strongly advised <strong>NOT</strong> to visit these links or enter
+            personal, banking, or login details.
+        </p>
+
+        <p>
+            If you have already interacted with any of these URLs,
+            please report immediately to the <strong>National Cyber Crime Portal</strong>
+            or your respective organization.
+        </p>
+
+        <div class="footer-note text-center">
+            This report is generated automatically using AI & Threat Intelligence.<br>
+            © 2025 Cyber Safety Portal | For Awareness & Security Purposes Only
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

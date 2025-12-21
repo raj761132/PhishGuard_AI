@@ -2,169 +2,184 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard | Phishing Detection</title>
+    <title>PhishGuard AI | User Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap CSS -->
+    <!-- Bootstrap + Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/userdashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body class="bg-light">
 
-<div class="d-flex">
+<div class="container-fluid p-4">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <h2 class="logo">PhishGuard AI</h2>
-        <nav>
-            <ul>
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#">Scan Services</a></li>
-                <li><a href="#">Scan History</a></li>
-                <li><a href="#">Reports</a></li>
-                <li><a href="#">Report Phishing</a></li>
-                <li><a href="#">Logout</a></li>
-            </ul>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content container-fluid">
-
-        <!-- Header -->
-        <div class="header mb-4">
-            <h1>User Dashboard</h1>
-            <p class="text-muted">
-                Government-Grade AI/ML Phishing Detection System
-            </p>
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4>Dashboard Overview</h4>
+            <small class="text-muted">Real-time phishing intelligence</small>
         </div>
+        <div class="text-end">
+            <strong>{{ current_user.full_name or current_user.email }}</strong><br>
+            <small class="text-muted">{{ current_user.role|capitalize }}</small>
+        </div>
+    </div>
 
-        <!-- Scan Services -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                Phishing Scan Services
-            </div>
+    <!-- SCANNER -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5>Analyze Suspicious URL</h5>
+            <input id="scanUrl" class="form-control mb-3" placeholder="https://example.com">
+            <button class="btn btn-primary" onclick="scanUrl()">
+                <i class="fas fa-search"></i> Scan URL
+            </button>
+            <div id="scanStatus" class="mt-3"></div>
+        </div>
+    </div>
 
-            <div class="card-body">
-                <div class="row g-4">
+    <!-- RESULTS -->
+    <div id="resultSection" class="row g-4 d-none">
 
-                    <!-- URL Scan -->
-                    <div class="col-md-6 col-lg-4">
-                        <div class="scan-box">
-                            <h5>🌐 URL Scan</h5>
-                            <input type="text" class="form-control mb-2" placeholder="Enter website URL">
-                            <button class="btn btn-primary w-100">Scan URL</button>
-                        </div>
-                    </div>
-
-                    <!-- Email Scan -->
-                    <div class="col-md-6 col-lg-4">
-                        <div class="scan-box">
-                            <h5>📧 Email Scan</h5>
-                            <textarea class="form-control mb-2" rows="3" placeholder="Paste email content"></textarea>
-                            <button class="btn btn-primary w-100">Scan Email</button>
-                        </div>
-                    </div>
-
-                    <!-- QR Scan -->
-                    <div class="col-md-6 col-lg-4">
-                        <div class="scan-box">
-                            <h5>📷 QR Code Scan</h5>
-                            <input type="text" class="form-control mb-2" placeholder="Enter QR decoded URL">
-                            <button class="btn btn-primary w-100">Scan QR</button>
-                        </div>
-                    </div>
-
-                    <!-- SMS Scan -->
-                    <div class="col-md-6 col-lg-4">
-                        <div class="scan-box">
-                            <h5>💬 SMS / Message Scan</h5>
-                            <textarea class="form-control mb-2" rows="3" placeholder="Paste SMS or message"></textarea>
-                            <button class="btn btn-primary w-100">Scan Message</button>
-                        </div>
-                    </div>
-
-                    <!-- Domain Reputation -->
-                    <div class="col-md-6 col-lg-4">
-                        <div class="scan-box">
-                            <h5>🛡️ Domain Reputation</h5>
-                            <input type="text" class="form-control mb-2" placeholder="Enter domain name">
-                            <button class="btn btn-primary w-100">Check Reputation</button>
-                        </div>
-                    </div>
-
-                    <!-- Brand Impersonation -->
-                    <div class="col-md-6 col-lg-4">
-                        <div class="scan-box">
-                            <h5>🏷️ Brand Impersonation</h5>
-                            <input type="text" class="form-control mb-2" placeholder="Enter brand or domain">
-                            <button class="btn btn-primary w-100">Check Abuse</button>
-                        </div>
-                    </div>
-
+        <!-- FINAL VERDICT -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Final Verdict</h6>
+                    <h3 id="finalVerdict"></h3>
+                    <p>Risk Level: <strong id="riskLevel"></strong></p>
+                    <p>Score: <strong id="riskScore"></strong></p>
                 </div>
             </div>
         </div>
 
-        <!-- Result Section -->
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                Phishing Detection Result
-            </div>
-            <div class="card-body">
-                <p><strong>Status:</strong> Safe</p>
-                <p><strong>Domain:</strong> example.com</p>
-                <p><strong>Risk Score:</strong> 12%</p>
+        <!-- ML -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>ML Prediction</h6>
+                    <p id="mlPrediction"></p>
+                </div>
             </div>
         </div>
 
-        <!-- Actions -->
-        <div class="mb-4">
-            <button class="btn btn-outline-primary me-2">Download Report</button>
-            <button class="btn btn-outline-danger">Report to Organization</button>
-        </div>
-
-        <!-- Scan History -->
-        <div class="card">
-            <div class="card-header bg-dark text-white">
-                Scan History
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered table-striped">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Date</th>
-                            <th>URL / Email</th>
-                            <th>Status</th>
-                            <th>Risk</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>18-12-2025</td>
-                            <td>secure-login-icici.in</td>
-                            <td class="text-danger">Phishing</td>
-                            <td>91%</td>
-                        </tr>
-                        <tr>
-                            <td>17-12-2025</td>
-                            <td>amazon.com</td>
-                            <td class="text-success">Safe</td>
-                            <td>5%</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- IP & LOCATION -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>IP & Hosting</h6>
+                    <p><strong>IP:</strong> <span id="ipAddr"></span></p>
+                    <p><strong>Country:</strong> <span id="country"></span></p>
+                    <p><strong>ISP:</strong> <span id="isp"></span></p>
+                </div>
             </div>
         </div>
 
-    </main>
+        <!-- SSL -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>SSL Analysis</h6>
+                    <p><strong>Risk:</strong> <span id="sslRisk"></span></p>
+                    <p><strong>Reason:</strong> <span id="sslReason"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- URL + BRAND -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>URL & Brand Analysis</h6>
+                    <p><strong>URL Risk:</strong> <span id="urlRisk"></span></p>
+                    <p><strong>Brand Impersonation:</strong> <span id="brandResult"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIGNALS -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Threat Signals</h6>
+                    <ul id="signalsList" class="mb-0"></ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function scanUrl() {
+    const url = document.getElementById("scanUrl").value.trim();
+    const status = document.getElementById("scanStatus");
+
+    if (!url) {
+        status.innerHTML = "<div class='alert alert-warning'>Enter a URL</div>";
+        return;
+    }
+
+    status.innerHTML = "<div class='text-muted'>Analyzing...</div>";
+
+    fetch("/api/scan-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            status.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+            return;
+        }
+
+        status.innerHTML = "";
+        document.getElementById("resultSection").classList.remove("d-none");
+
+        /* Core verdict */
+        document.getElementById("finalVerdict").innerText = data.final_verdict;
+        document.getElementById("riskLevel").innerText = data.risk_level;
+        document.getElementById("riskScore").innerText = data.score;
+
+        /* ML */
+        document.getElementById("mlPrediction").innerText =
+            `${data.ml.prediction} (${data.ml.confidence}%)`;
+
+        /* IP */
+        document.getElementById("ipAddr").innerText = data.ip?.ip || "Unknown";
+        document.getElementById("country").innerText = data.ip?.country || "Unknown";
+        document.getElementById("isp").innerText = data.ip?.isp || "Unknown";
+
+        /* SSL */
+        document.getElementById("sslRisk").innerText = data.ssl?.risk || "N/A";
+        document.getElementById("sslReason").innerText = data.ssl?.reason || "N/A";
+
+        /* URL + Brand */
+        document.getElementById("urlRisk").innerText =
+            data.url_analysis?.risk || "N/A";
+
+        document.getElementById("brandResult").innerText =
+            data.brand?.impersonation
+                ? `Yes (${data.brand.brand})`
+                : "No";
+
+        /* Signals */
+        const signals = document.getElementById("signalsList");
+        signals.innerHTML = "";
+        data.signals.forEach(sig => {
+            const li = document.createElement("li");
+            li.textContent = sig;
+            signals.appendChild(li);
+        });
+    })
+    .catch(() => {
+        status.innerHTML = "<div class='alert alert-danger'>Scan failed</div>";
+    });
+}
+</script>
 
 </body>
 </html>

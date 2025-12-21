@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Cyber Defense Portal | Phishing Detection System</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Government Theme Colors */
+        .gov-blue { background-color: #0f172a; } /* Slate-900 */
+        
+        /* Modal Transitions */
+        .modal { transition: opacity 0.25s ease, visibility 0.25s ease; }
+        
+        /* The "Speech Bubble" Triangle for the Live Stats Window */
+        .popover-arrow {
+            width: 14px;
+            height: 14px;
+            background-color: #0f172a; /* Matches the popup background */
+            border-top: 1px solid #334155; /* Matches border */
+            border-left: 1px solid #334155;
+            transform: rotate(45deg);
+            position: absolute;
+            top: -8px;
+            right: 45px; /* Aligns with the button text */
+            z-index: 60;
+        }
+
+        /* Terminal Text Animation */
+        .typing-effect::after {
+            content: '▋';
+            animation: blink 1s step-start infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+
+    <nav class="gov-blue text-white py-4 shadow-lg sticky top-0 z-40 border-b border-slate-700">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo(0,0)">
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold text-xl shadow-md ring-2 ring-blue-500/50">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide uppercase">PhishGuard AI</h1>
+                </div>
+            </div>
+
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="#" class="hover:text-blue-300 text-sm font-medium transition">Home</a>
+                <a href="#how-it-works" class="hover:text-blue-300 text-sm font-medium transition">How It Works</a>
+                
+                <div class="relative group">
+                    <button onclick="toggleLiveStats()" class="hover:text-blue-300 text-sm font-medium transition flex items-center gap-2 focus:outline-none">
+                        <span class="relative flex h-2.5 w-2.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                        </span>
+                        Live Status
+                    </button>
+
+                    <div id="liveStatsWindow" class="hidden absolute top-14 -right-20 w-80 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 transform transition-all duration-200">
+                        
+                        <div class="popover-arrow"></div>
+
+                        <div class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center rounded-t-lg">
+                            <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider">System Status</h4>
+                            <span class="bg-green-900/40 text-green-400 text-[10px] px-2 py-0.5 rounded border border-green-800 animate-pulse">
+                                ● LIVE
+                            </span>
+                        </div>
+
+                        <div class="p-4 space-y-4 font-mono text-sm">
+                            
+                            <div>
+                                <div class="flex justify-between text-gray-400 text-xs mb-1">
+                                    <span>Server Load</span>
+                                    <span id="serverLoad" class="text-blue-400">12%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                    <div id="loadBar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-700" style="width: 12%"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center border-t border-slate-800 pt-3">
+                                <span class="text-gray-400 text-xs">URLs Scanned (Today)</span>
+                                <span id="scanCounter" class="text-white font-bold tracking-wider">1,024,592</span>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400 text-xs">Threats Neutralized</span>
+                                <span id="threatCounter" class="text-red-400 font-bold tracking-wider">14,203</span>
+                            </div>
+
+                            <div class="bg-black/50 p-3 rounded border border-slate-700 mt-2 font-xs h-16 flex items-center">
+                                <p id="activityLog" class="text-[10px] text-green-400 w-full truncate typing-effect">
+                                    > System Initialized...
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800 px-4 py-2 border-t border-slate-700 text-center rounded-b-lg">
+                            <span class="text-[10px] text-gray-500">Updates in real-time via WebSocket</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-3">
+                <button onclick="openRegisterModal()" class="hidden md:block border border-gray-500 hover:border-white text-gray-300 hover:text-white px-4 py-2 rounded text-sm font-semibold transition">
+                    New User
+                </button>
+                <button onclick="openLoginModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded text-sm font-semibold shadow-lg transition transform hover:-translate-y-0.5">
+                    Login
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-slate-900 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-950 via-slate-900 to-black opacity-95"></div>
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 30px 30px;"></div>
+
+        <div class="container mx-auto px-6 py-20 relative z-10 flex flex-col md:flex-row items-center">
+            <div class="md:w-2/3 pr-10">
+                <div class="inline-flex items-center bg-red-900/30 border border-red-500/30 text-red-400 text-xs font-bold px-3 py-1 rounded mb-6 uppercase tracking-wide">
+                    <span class="animate-pulse mr-2">●</span> High Alert: Digital Fraud Wave
+                </div>
+                <h2 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
+                    Combating Phishing Threats <br> <span class="text-blue-400">Before They Strike.</span>
+                </h2>
+                <p class="text-lg text-gray-300 mb-8 max-w-2xl leading-relaxed">
+                    Phishing attacks compromise millions daily. Our centralized AI-driven system detects, analyzes, and blocks malicious URLs to ensure national digital safety.
+                </p>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button onclick="openLoginModal()" class="bg-white text-blue-900 font-bold px-8 py-3.5 rounded shadow-lg hover:bg-gray-100 transition flex items-center justify-center">
+                        <i class="fa-solid fa-magnifying-glass mr-2"></i> Check a URL
+                    </button>
+                    <a href="#how-it-works" class="border border-gray-500 text-gray-300 font-medium px-8 py-3.5 rounded hover:border-white hover:text-white transition text-center">
+                        How It Works
+                    </a>
+                </div>
+            </div>
+
+            <div class="md:w-1/3 mt-12 md:mt-0 flex justify-end">
+                <div class="bg-white/5 backdrop-blur-md p-6 rounded-xl border border-white/10 shadow-2xl w-full max-w-sm">
+                    <h3 class="text-white font-semibold mb-4 border-b border-white/10 pb-2 flex justify-between">
+                        <span>Database Status</span>
+                        <i class="fa-solid fa-database text-blue-400"></i>
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">Uptime</span>
+                            <span class="text-green-400 text-sm font-bold flex items-center"><i class="fa-solid fa-check-circle mr-1"></i> 99.99%</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">Detection Accuracy</span>
+                            <span class="text-white text-sm font-bold">98.5%</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">Daily Scans</span>
+                            <span class="text-white text-sm font-bold">1.2M+</span>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 text-center pt-2 border-t border-white/10">
+                            Authorized by National Security Dept.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-12 text-center">
+                <div class="group p-6 rounded-xl transition duration-300 hover:bg-blue-50 cursor-default">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl shadow-sm group-hover:scale-110 transition">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">AI-Powered Detection</h3>
+                    <p class="text-gray-600 leading-relaxed">Advanced machine learning algorithms scan URL structures and hosting patterns to identify zero-day threats instantly.</p>
+                </div>
+                <div class="group p-6 rounded-xl transition duration-300 hover:bg-blue-50 cursor-default">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl shadow-sm group-hover:scale-110 transition">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Citizen Protection</h3>
+                    <p class="text-gray-600 leading-relaxed">Preventing data theft and financial fraud by blocking access to malicious websites before they load on user devices.</p>
+                </div>
+                <div class="group p-6 rounded-xl transition duration-300 hover:bg-blue-50 cursor-default">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl shadow-sm group-hover:scale-110 transition">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Centralized Command</h3>
+                    <p class="text-gray-600 leading-relaxed">A unified dashboard for authorities to track attack heatmaps, manage blacklists, and issue immediate takedowns.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="py-20 bg-slate-50 border-t border-slate-200">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-900">How The System Works</h2>
+                <p class="text-gray-500 mt-3 max-w-xl mx-auto">A transparent, automated, and secure workflow designed for speed.</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-center items-center space-y-12 md:space-y-0 relative px-4">
+                <div class="hidden md:block absolute top-8 left-24 right-24 h-0.5 bg-slate-300 -z-0"></div>
+
+                <div class="md:w-1/4 flex flex-col items-center relative z-10 group">
+                    <div class="w-16 h-16 bg-white border-4 border-blue-600 text-blue-900 rounded-full flex items-center justify-center text-xl font-bold shadow-lg group-hover:-translate-y-2 transition">
+                        1
+                    </div>
+                    <h4 class="mt-6 font-bold text-lg text-slate-800">Submit URL</h4>
+                    <p class="text-center text-sm text-gray-600 px-2 mt-2">User or API submits a suspicious link for verification.</p>
+                </div>
+
+                <div class="md:w-1/4 flex flex-col items-center relative z-10 group">
+                    <div class="w-16 h-16 bg-white border-4 border-blue-600 text-blue-900 rounded-full flex items-center justify-center text-xl font-bold shadow-lg group-hover:-translate-y-2 transition">
+                        2
+                    </div>
+                    <h4 class="mt-6 font-bold text-lg text-slate-800">Deep Scan</h4>
+                    <p class="text-center text-sm text-gray-600 px-2 mt-2">System analyzes SSL, domain age, and page content.</p>
+                </div>
+
+                <div class="md:w-1/4 flex flex-col items-center relative z-10 group">
+                    <div class="w-16 h-16 bg-white border-4 border-blue-600 text-blue-900 rounded-full flex items-center justify-center text-xl font-bold shadow-lg group-hover:-translate-y-2 transition">
+                        3
+                    </div>
+                    <h4 class="mt-6 font-bold text-lg text-slate-800">Risk Score</h4>
+                    <p class="text-center text-sm text-gray-600 px-2 mt-2">A safety score (0-100) is generated instantly.</p>
+                </div>
+
+                <div class="md:w-1/4 flex flex-col items-center relative z-10 group">
+                    <div class="w-16 h-16 bg-white border-4 border-green-600 text-green-700 rounded-full flex items-center justify-center text-xl font-bold shadow-lg group-hover:-translate-y-2 transition">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h4 class="mt-6 font-bold text-lg text-slate-800">Action Taken</h4>
+                    <p class="text-center text-sm text-gray-600 px-2 mt-2">Site is blocked, and authorities are alerted.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-2xl font-bold text-slate-800">Who This Platform Serves</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-slate-50 p-8 rounded-xl border-l-4 border-blue-400 hover:shadow-lg transition">
+                    <div class="text-blue-500 text-3xl mb-4"><i class="fa-solid fa-users"></i></div>
+                    <h3 class="font-bold text-lg mb-3 text-slate-900">Citizens</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">Verify suspicious links received via SMS or Email instantly. Report fraud and contribute to national safety.</p>
+                </div>
+                <div class="bg-slate-50 p-8 rounded-xl border-l-4 border-blue-700 hover:shadow-lg transition">
+                    <div class="text-blue-800 text-3xl mb-4"><i class="fa-solid fa-building"></i></div>
+                    <h3 class="font-bold text-lg mb-3 text-slate-900">Organizations</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">Protect your brand identity. Use our API to integrate phishing detection into your internal systems.</p>
+                </div>
+                <div class="bg-slate-50 p-8 rounded-xl border-l-4 border-red-600 hover:shadow-lg transition">
+                    <div class="text-red-600 text-3xl mb-4"><i class="fa-solid fa-user-shield"></i></div>
+                    <h3 class="font-bold text-lg mb-3 text-slate-900">Admins / Authorities</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">Centralized command to view global heatmaps, manage threat blacklists, and enforce domain takedowns.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-6 md:mb-0 text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start space-x-2 mb-2 text-white">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span class="font-bold tracking-wide">N.P.D.S</span>
+                </div>
+                <p class="text-sm">© 2025 PhishGuard AI. All rights reserved.</p>
+                <p class="text-xs mt-2 text-slate-500">Project demonstration portal showcasing AI-driven phishing detection and monitoring capabilities..</p>
+            </div>
+            <div class="flex space-x-8 text-sm font-medium">
+                <a href="#" class="hover:text-white transition">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition">Terms of Service</a>
+                <a href="#" class="hover:text-white transition">Contact Support</a>
+            </div>
+        </div>
+    </footer>
+
+
+    <div id="loginModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center backdrop-blur-sm modal p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md relative overflow-hidden transform scale-100 transition-transform">
+            <div class="bg-slate-50 p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-800">Secure Login</h3>
+                <button onclick="closeModals()" class="text-gray-400 hover:text-red-500 transition">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-3">
+                <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Select your Role</p>
+
+                <a href="/admin-login" class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition group cursor-pointer">
+                    <div class="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center mr-4 group-hover:bg-red-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-700 group-hover:text-red-700">Admin / Authority</h4>
+                        <p class="text-xs text-gray-500">System management access</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-red-500"></i>
+                </a>
+
+                <a href="/official-login" class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition group cursor-pointer">
+                    <div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mr-4 group-hover:bg-blue-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-700 group-hover:text-blue-700">Organization</h4>
+                        <p class="text-xs text-gray-500">Brand protection & API</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-blue-500"></i>
+                </a>
+
+                <a href="/login" class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition group cursor-pointer">
+                    <div class="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center mr-4 group-hover:bg-green-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-700 group-hover:text-green-700">Citizen / User</h4>
+                        <p class="text-xs text-gray-500">Report & verify URLs</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-green-500"></i>
+                </a>
+            </div>
+            
+            <div class="bg-gray-50 p-4 text-center border-t border-gray-100">
+                <p class="text-xs text-gray-500">Don't have an account? <span onclick="openRegisterModal()" class="text-blue-600 font-bold cursor-pointer hover:underline">Register here</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="registerModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center backdrop-blur-sm modal p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md relative overflow-hidden">
+            <div class="bg-slate-50 p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-800">Create Account</h3>
+                <button onclick="closeModals()" class="text-gray-400 hover:text-red-500 transition">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-3">
+                <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Registration Type</p>
+
+                <a href="/register-org" class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition group cursor-pointer">
+                    <div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mr-4 group-hover:bg-blue-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-700 group-hover:text-blue-700">Organization</h4>
+                        <p class="text-xs text-gray-500">For companies & institutions</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-blue-500"></i>
+                </a>
+
+                <a href="/register-citizen" class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition group cursor-pointer">
+                    <div class="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center mr-4 group-hover:bg-green-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-700 group-hover:text-green-700">Citizen</h4>
+                        <p class="text-xs text-gray-500">For personal use</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-green-500"></i>
+                </a>
+            </div>
+
+            <div class="bg-gray-50 p-4 text-center border-t border-gray-100">
+                <p class="text-xs text-gray-500">Already registered? <span onclick="openLoginModal()" class="text-blue-600 font-bold cursor-pointer hover:underline">Login here</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- 1. MODAL LOGIC (Keep this the same) ---
+    const loginModal = document.getElementById('loginModal');
+    const registerModal = document.getElementById('registerModal');
+    const statsWindow = document.getElementById('liveStatsWindow');
+
+    function openLoginModal() { loginModal.classList.remove('hidden'); }
+    function openRegisterModal() { registerModal.classList.remove('hidden'); }
+    function closeModals() {
+        loginModal.classList.add('hidden');
+        registerModal.classList.add('hidden');
+    }
+    
+    // Close on click outside
+    window.onclick = function(event) {
+        if (event.target == loginModal || event.target == registerModal) closeModals();
+        if (!statsWindow.contains(event.target) && !event.target.closest('[onclick="toggleLiveStats()"]')) {
+            statsWindow.classList.add('hidden');
+        }
+    }
+
+    function toggleLiveStats() {
+        statsWindow.classList.toggle('hidden');
+        // If opening, ensure we fetch data immediately
+        if (!statsWindow.classList.contains('hidden')) {
+            fetchRealData(); 
+        }
+    }
+
+    // --- 2. REAL DATA FETCHING LOGIC ---
+    async function fetchRealData() {
+        try {
+            // Call the Python API
+            const response = await fetch('/api/stats');
+            const data = await response.json();
+
+            // Update the UI with Database/System values
+            document.getElementById('scanCounter').innerText = data.scans.toLocaleString();
+            document.getElementById('threatCounter').innerText = data.threats.toLocaleString();
+            
+            // Update Real Server Load
+            document.getElementById('serverLoad').innerText = data.server_load + "%";
+            document.getElementById('loadBar').style.width = data.server_load + "%";
+            
+            // Update Log
+            const logBox = document.getElementById('activityLog');
+            logBox.innerText = "> " + data.log;
+            
+            // Flash effect
+            logBox.classList.add('text-white');
+            setTimeout(() => logBox.classList.remove('text-white'), 200);
+
+        } catch (error) {
+            console.error("Error connecting to Python backend:", error);
+            document.getElementById('activityLog').innerText = "> Connection Lost. Reconnecting...";
+        }
+    }
+
+    // Poll the server every 2 seconds
+    setInterval(fetchRealData, 2000);
+    
+    // Initial fetch
+    fetchRealData();
+</script>
+</body>
+</html>

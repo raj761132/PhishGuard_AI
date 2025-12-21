@@ -1,7 +1,8 @@
 from services.final_verdict import final_verdict
 
 urls = [
-    "https://gietuerp.xnxx/"
+    "https://gietuerp.xnxx/",
+    "rbi.co.in"
 ]
 
 for url in urls:

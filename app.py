@@ -286,12 +286,31 @@ def scan_url_api():
         report = final_verdict(url)
 
         return jsonify({
+            # Core
             "url": report["url"],
             "final_verdict": report["final_verdict"],
             "risk_level": report["risk_level"],
             "score": report["score"],
-            "ml_prediction": report["ml"]["prediction"],
-            "ml_confidence": report["ml"]["confidence"],
+
+            # ML
+            "ml": {
+                "prediction": report["ml"]["prediction"],
+                "confidence": report["ml"]["confidence"]
+            },
+
+            # SSL
+            "ssl": report.get("ssl"),
+
+            # IP & Hosting
+            "ip": report.get("ip"),
+
+            # URL structure
+            "url_analysis": report.get("url_analysis"),
+
+            # Brand check
+            "brand": report.get("brand"),
+
+            # Signals
             "signals": report["signals"]
         })
 
@@ -300,6 +319,7 @@ def scan_url_api():
             "error": "Analysis failed",
             "details": str(e)
         }), 500
+
 
 @app.route("/ORG-dashboard")
 @login_required

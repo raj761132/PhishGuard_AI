@@ -70,10 +70,8 @@ class User(UserMixin, db.Document):
     role = db.StringField(required=True)  # citizen | org | admin
 
     created_at = db.DateTimeField(default=datetime.datetime.utcnow)
-
-    # Verification / approval (used for org/admin only)
-    is_verified = db.BooleanField(default=True)
-    is_approved = db.BooleanField(default=False)
+    is_verified = db.BooleanField(default=False)
+    is_approved = db.BooleanField(default=False) 
 
     # Citizen
     full_name = db.StringField()
@@ -116,33 +114,77 @@ def load_user(user_id):
 def home():
     return render_template("index.html")
 
-# ---------------- CITIZEN (NO OTP) ------------------
+# ---------------------------------------------------
+#  A. CITIZEN ROUTES
+# ---------------------------------------------------
 
 @app.route("/register-citizen", methods=["GET", "POST"])
 def register_citizen():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role = 'citizen'
 
-        if User.objects(email=email).first():
-            flash("Email already registered. Please login.", "danger")
-            return redirect(url_for("login_citizen"))
+        existing_user = User.objects(email=email).first()
+        if existing_user:
+            flash('Email already registered. Please login.', 'danger')
+            return redirect(url_for('login_citizen'))
 
         User(
             email=email,
             password_hash=generate_password_hash(password),
-            role="citizen",
-            full_name=request.form.get("full_name"),
-            phone=request.form.get("phone"),
-            is_verified=True
-        ).save()
+            role=role,
+            otp_code=otp,
+            otp_expiry=expiry,
+            is_verified=False,
+            full_name=request.form.get('full_name'),
+            phone=request.form.get('phone')
+        )
 
-        flash("Registration successful. Please login.", "success")
-        return redirect(url_for("login_citizen"))
+        try:
+            new_user.save()
+            
+            msg = Message('Your OTP Verification Code', 
+                          sender='noreply@cyberportal.gov', 
+                          recipients=[email])
+            msg.body = f"Your Code: {otp}"
+            mail.send(msg)
+            
+            session['email_to_verify'] = email
+            flash('Registration successful! Please verify OTP.', 'info')
+            return redirect(url_for('verify_otp'))
+            
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'danger')
+            return redirect(url_for('register_citizen'))
 
     return render_template("citizen-register.html")
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp():
+    if request.method == 'POST':
+        entered_otp = request.form.get('otp')
+        email = session.get('email_to_verify')
+
+        if not email:
+            flash('Session expired. Please register again.', 'danger')
+            return redirect(url_for('register_citizen'))
+
+        user = User.objects(email=email).first()
+
+        if user and user.otp_code == entered_otp:
+            user.is_verified = True
+            user.otp_code = None
+            user.save()
+            session.pop('email_to_verify', None)
+            flash('Account Verified! Please login.', 'success')
+            return redirect(url_for('login_citizen'))
+        else:
+            flash('Invalid or Expired OTP', 'danger')
+
+    return render_template('otp-verify.html')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login_citizen():
     if request.method == "POST":
         email = request.form.get("email")

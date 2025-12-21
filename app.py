@@ -70,7 +70,7 @@ class User(db.Document, UserMixin):
     role = db.StringField(required=True)  # citizen | org | admin
     created_at = db.DateTimeField(default=datetime.datetime.utcnow)
 
-    # Status
+    # Verification / approval (used for org/admin only)
     is_verified = db.BooleanField(default=True)
     is_approved = db.BooleanField(default=False)
 
@@ -123,142 +123,75 @@ def verify_domain(domain):
 def home():
     return render_template("index.html")
 
-#----------------ADMIN-------------------
-
-@app.route("/admin/login", methods=["GET", "POST"])
-def admin_login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        #Hardcoded admin credentials
-        if email == "admin@phishguard.gov.in" and password == "Admin@123":
-            admin = User.objects(email=email).first()
-
-            if not admin:
-                admin = User(
-                    email=email,
-                    password_hash=generate_password_hash(password),
-                    role="admin",
-                    is_verified=True,
-                    is_approved=True
-                )
-                admin.save()
-
-            login_user(admin)
-            return redirect(url_for("admin_dashboard"))
-
-        flash("Invalid admin credentials", "danger")
-        return redirect(url_for("admin_login"))
-
-    return render_template("admin_login.html")
-
-def send_approval_email(org):
-    msg = Message(
-        subject="Organization Approved – PhishGuard AI",
-        recipients=[org.email]
-    )
-    msg.body = f"""
-Hello {org.org_name},
-
-Your organization has been approved by CERT-IN.
-
-You can now log in using your registered email.
-
-Regards,
-PhishGuard AI – CERT-IN
-"""
-    mail.send(msg)
-
-
-@app.route("/admin/dashboard")
-@login_required
-def admin_dashboard():
-    if current_user.role != "admin":
-        abort(403)
-
-    return render_template("admindashboard.html")
-
-@app.route("/admin/org-requests")
-@login_required
-def org_requests():
-    if current_user.role != "admin":
-        abort(403)
-
-    pending_orgs = User.objects(
-        role="org",
-        is_approved=False
-    )
-
-    return render_template(
-        "org-requests.html",
-        orgs=pending_orgs
-    )
-    
-@app.route("/admin/approve-org/<user_id>")
-@login_required
-def approve_org(user_id):
-    if current_user.role != "admin":
-        abort(403)
-
-    org = User.objects(id=user_id).first()
-    if not org:
-        abort(404)
-
-    org.is_approved = True
-    org.save()
-
-    send_approval_email(org)
-
-    flash("Organization approved successfully", "success")
-    return redirect(url_for("org_requests"))
-
-@app.route("/admin/organizations")
-@login_required
-def admin_organizations():
-    if current_user.role != "admin":
-        abort(403)
-
-    approved_orgs = User.objects(
-        role="org",
-        is_approved=True
-    )
-
-    return render_template(
-        "admin-organizations.html",
-        orgs=approved_orgs
-    )
-
-
-
-
 # ---------------- CITIZEN (NO OTP) ------------------
 
 @app.route("/register-citizen", methods=["GET", "POST"])
 def register_citizen():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role = 'citizen'
 
-        if User.objects(email=email).first():
-            flash("Email already registered. Please login.", "danger")
-            return redirect(url_for("login_citizen"))
+        existing_user = User.objects(email=email).first()
+        if existing_user:
+            flash('Email already registered. Please login.', 'danger')
+            return redirect(url_for('login_citizen'))
 
         User(
             email=email,
             password_hash=generate_password_hash(password),
-            role="citizen",
-            full_name=request.form.get("full_name"),
-            phone=request.form.get("phone"),
-            is_verified=True
-        ).save()
+            role=role,
+            otp_code=otp,
+            otp_expiry=expiry,
+            is_verified=False,
+            full_name=request.form.get('full_name'),
+            phone=request.form.get('phone')
+        )
 
-        flash("Registration successful. Please login.", "success")
-        return redirect(url_for("login_citizen"))
+        try:
+            new_user.save()
+            
+            msg = Message('Your OTP Verification Code', 
+                          sender='noreply@cyberportal.gov', 
+                          recipients=[email])
+            msg.body = f"Your Code: {otp}"
+            mail.send(msg)
+            
+            session['email_to_verify'] = email
+            flash('Registration successful! Please verify OTP.', 'info')
+            return redirect(url_for('verify_otp'))
+            
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'danger')
+            return redirect(url_for('register_citizen'))
 
     return render_template("citizen-register.html")
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp():
+    if request.method == 'POST':
+        entered_otp = request.form.get('otp')
+        email = session.get('email_to_verify')
+
+        if not email:
+            flash('Session expired. Please register again.', 'danger')
+            return redirect(url_for('register_citizen'))
+
+        user = User.objects(email=email).first()
+
+        if user and user.otp_code == entered_otp:
+            user.is_verified = True
+            user.otp_code = None
+            user.save()
+            session.pop('email_to_verify', None)
+            flash('Account Verified! Please login.', 'success')
+            return redirect(url_for('login_citizen'))
+        else:
+            flash('Invalid or Expired OTP', 'danger')
+
+    return render_template('otp-verify.html')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login_citizen():
     if request.method == "POST":
         email = request.form.get("email")

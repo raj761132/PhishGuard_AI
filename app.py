@@ -1,6 +1,11 @@
 import os
 import random
 import datetime
+import psutil
+import requests
+import socket
+import uuid  # Added for generating Case IDs
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from flask import (
@@ -15,7 +20,24 @@ from flask_mongoengine import MongoEngine
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from services.final_verdict import final_verdict
+
+# Import your existing ML logic
+# Ensure this file exists in services/final_verdict.py
+try:
+    from services.final_verdict import final_verdict
+except ImportError:
+    # Fallback for testing if file is missing
+    def final_verdict(url):
+        return {
+            "url": url,
+            "final_verdict": "SUSPICIOUS (Demo)",
+            "risk_level": "High",
+            "score": 85,
+            "ssl": {"risk": "High", "reason": "Self-signed"},
+            "url_analysis": {"risk": "Malicious"},
+            "brand": {"impersonation": True, "brand": "DemoBank"},
+            "signals": ["Typosquatting detected"]
+        }
 
 # ==========================================
 # 1. LOAD ENV & APP INIT
@@ -24,7 +46,7 @@ from services.final_verdict import final_verdict
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key")
 
 # ==========================================
 # 2. FILE UPLOAD CONFIG
@@ -52,14 +74,23 @@ mail = Mail(app)
 # ==========================================
 
 app.config["MONGODB_SETTINGS"] = {
-    "host": os.getenv("MONGO_URI")
+    "host": os.getenv("MONGO_URI", "mongodb://localhost:27017/phishguard") # Added default local fallback
 }
 
 db = MongoEngine()
 db.init_app(app)
 
+# TEST CONNECTION SAFELY
+with app.app_context():
+    try:
+        db.connection.server_info()
+        print("✅ MongoDB connected successfully")
+    except Exception as e:
+        print("❌ MongoDB connection failed")
+        print(e)
+
 # ==========================================
-# 5. USER MODEL
+# 5. DB MODELS
 # ==========================================
 
 class User(UserMixin, db.Document):
@@ -96,8 +127,67 @@ class User(UserMixin, db.Document):
     def get_id(self):
         return str(self.id)
 
+# Stats Model (For real-time dashboard data)
+class SystemStats(db.Document):
+    meta = {"collection": "system_stats", "strict": False}
+    total_scans = db.IntField(default=0)
+    threats_blocked = db.IntField(default=0)
+    last_updated = db.DateTimeField(default=datetime.datetime.utcnow)
+
+# NEW: Case Model for Reporting
+class Case(db.Document):
+    meta = {"collection": "cases", "strict": False}
+    case_id = db.StringField(required=True, unique=True)
+    target = db.StringField(required=True)
+    report_data = db.DictField() # Store the full scan result
+    reported_by = db.StringField() # Email of user who reported
+    status = db.StringField(default="Pending") # Pending, Investigating, Resolved
+    timestamp = db.DateTimeField(default=datetime.datetime.utcnow)
+
 # ==========================================
-# 6. LOGIN MANAGER
+# 6. HELPER FUNCTIONS
+# ==========================================
+
+def get_ip_details(url):
+    """
+    Resolves domain to IP and fetches Geo-Location + LAT/LON
+    """
+    try:
+        if not url.startswith("http"):
+            url = "http://" + url
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc
+        
+        if not domain:
+            domain = url.split('/')[0]
+
+        try:
+            ip_address = socket.gethostbyname(domain)
+        except:
+            return {"ip": "0.0.0.0", "country": "Unknown", "isp": "Unknown", "lat": 0, "lon": 0}
+
+        # Requesting status, country, countryCode, isp, lat, lon
+        response = requests.get(f"http://ip-api.com/json/{ip_address}?fields=status,country,countryCode,isp,lat,lon", timeout=5)
+        data = response.json()
+
+        if data.get('status') == 'success':
+            return {
+                "ip": ip_address,
+                "country": data.get('countryCode', 'Unknown'),
+                "country_full": data.get('country', 'Unknown'),
+                "isp": data.get('isp', 'Unknown'),
+                "lat": data.get('lat', 0),   # Latitude
+                "lon": data.get('lon', 0)    # Longitude
+            }
+        else:
+            return {"ip": ip_address, "country": "Unknown", "country_full": "Unknown", "isp": "Unknown", "lat": 0, "lon": 0}
+
+    except Exception as e:
+        print(f"Geo-IP Lookup Failed: {e}")
+        return {"ip": "0.0.0.0", "country": "Unknown", "isp": "Hidden", "lat": 0, "lon": 0}
+
+# ==========================================
+# 7. LOGIN MANAGER
 # ==========================================
 
 login_manager = LoginManager()
@@ -109,7 +199,7 @@ def load_user(user_id):
     return User.objects(pk=user_id).first()
 
 # ==========================================
-# 7. ROUTES
+# 8. ROUTES
 # ==========================================
 
 @app.route("/")
@@ -176,11 +266,15 @@ def send_otp_org():
     session["org_otp"] = otp
     session["org_email"] = email
 
-    msg = Message("Organization OTP", recipients=[email])
-    msg.body = f"OTP: {otp}"
-    mail.send(msg)
-
-    return jsonify({"success": True})
+    # Note: Ensure you have configured SMTP environment variables for this to work
+    try:
+        msg = Message("Organization OTP", recipients=[email])
+        msg.body = f"OTP: {otp}"
+        mail.send(msg)
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Mail Error: {e}")
+        return jsonify({"success": False, "message": "Failed to send OTP. Check logs."})
 
 @app.route("/verify-otp-org", methods=["POST"])
 def verify_otp_org():
@@ -204,11 +298,11 @@ def register_org_submit():
     auth_path = incorp_path = None
 
     if auth_file:
-        auth_path = os.path.join(app.config["UPLOAD_FOLDER"], auth_file.filename)
+        auth_path = os.path.join(app.config["UPLOAD_FOLDER"], secure_filename(auth_file.filename))
         auth_file.save(auth_path)
 
     if incorp_file:
-        incorp_path = os.path.join(app.config["UPLOAD_FOLDER"], incorp_file.filename)
+        incorp_path = os.path.join(app.config["UPLOAD_FOLDER"], secure_filename(incorp_file.filename))
         incorp_file.save(incorp_path)
 
     User(
@@ -271,55 +365,8 @@ def login_admin():
 def dashboard():
     if current_user.role == "org":
         return redirect(url_for("org_dashboard"))
-    return render_template("userdashboard.html")
-
-@app.route("/api/scan-url", methods=["POST"])
-@login_required
-def scan_url_api():
-    data = request.get_json()
-    url = data.get("url", "").strip()
-
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
-
-    try:
-        report = final_verdict(url)
-
-        return jsonify({
-            # Core
-            "url": report["url"],
-            "final_verdict": report["final_verdict"],
-            "risk_level": report["risk_level"],
-            "score": report["score"],
-
-            # ML
-            "ml": {
-                "prediction": report["ml"]["prediction"],
-                "confidence": report["ml"]["confidence"]
-            },
-
-            # SSL
-            "ssl": report.get("ssl"),
-
-            # IP & Hosting
-            "ip": report.get("ip"),
-
-            # URL structure
-            "url_analysis": report.get("url_analysis"),
-
-            # Brand check
-            "brand": report.get("brand"),
-
-            # Signals
-            "signals": report["signals"]
-        })
-
-    except Exception as e:
-        return jsonify({
-            "error": "Analysis failed",
-            "details": str(e)
-        }), 500
-
+    # Pass user to template for header display
+    return render_template("userdashboard.html", current_user=current_user)
 
 @app.route("/ORG-dashboard")
 @login_required
@@ -333,8 +380,149 @@ def logout():
     return redirect(url_for("home"))
 
 # ==========================================
-# 8. RUN
+# 9. SCANNING API (UPDATED WITH REPORTING)
 # ==========================================
 
+@app.route("/api/scan-url", methods=["POST"])
+@login_required
+def scan_url_api():
+    data = request.get_json()
+    url = data.get("url", "").strip()
+
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+
+    try:
+        # 1. Get Base Analysis (ML, Heuristics)
+        report = final_verdict(url)
+        
+        # 2. Get Real Geo-Location Data
+        geo_data = get_ip_details(url)
+        
+        # 3. Update Database Stats (Increment Scan Count)
+        stats = SystemStats.objects.first()
+        if not stats:
+            stats = SystemStats(total_scans=0, threats_blocked=0)
+        
+        stats.total_scans += 1
+        if report.get("final_verdict", "").upper() != "SAFE":
+            stats.threats_blocked += 1
+        stats.save()
+
+        # 4. Construct Final Response
+        # IMPORTANT: Added 'lat', 'lon', 'country_full' for Map & Popups
+        return jsonify({
+            # Core
+            "url": report.get("url", url),
+            "final_verdict": report.get("final_verdict", "UNKNOWN"),
+            "risk_level": report.get("risk_level", "UNKNOWN"),
+            "score": report.get("score", 0),
+
+            # Geo-Location
+            "ip": {
+                "ip": geo_data["ip"],
+                "country": geo_data["country"], 
+                "country_full": geo_data.get("country_full", "Unknown"), # Added for popup
+                "isp": geo_data["isp"],
+                "lat": geo_data.get("lat", 0),  # Added for Map
+                "lon": geo_data.get("lon", 0)   # Added for Map
+            },
+
+            # SSL
+            "ssl": report.get("ssl", {"risk": "UNKNOWN", "reason": "Scan pending"}),
+
+            # URL Analysis
+            "url_analysis": report.get("url_analysis", {"risk": "UNKNOWN"}),
+
+            # Brand Check
+            "brand": report.get("brand", {"impersonation": False, "brand": None}),
+
+            # Signals
+            "signals": report.get("signals", [])
+        })
+
+    except Exception as e:
+        print(f"API Error: {e}")
+        return jsonify({
+            "error": "Analysis failed",
+            "details": str(e)
+        }), 500
+
+# ==========================================
+# 10. REPORT CASE API (NEW)
+# ==========================================
+
+@app.route("/api/report-case", methods=["POST"])
+@login_required
+def report_case():
+    try:
+        data = request.get_json()
+        target = data.get("target")
+        scan_data = data.get("data")
+        
+        if not target or not scan_data:
+            return jsonify({"error": "Missing case data"}), 400
+
+        # Generate unique ID
+        case_id = f"CASE-{uuid.uuid4().hex[:8].upper()}"
+        
+        # Save to MongoDB
+        Case(
+            case_id=case_id,
+            target=target,
+            report_data=scan_data,
+            reported_by=current_user.email,
+            status="Pending"
+        ).save()
+        
+        print(f"✅ New Case Filed: {case_id}")
+
+        return jsonify({
+            "status": "success",
+            "message": "Report filed successfully",
+            "case_id": case_id
+        }), 200
+
+    except Exception as e:
+        print(f"Report Error: {e}")
+        return jsonify({"error": "Failed to file report"}), 500
+
+# ==========================================
+# 11. SYSTEM STATS API
+# ==========================================
+
+@app.route('/api/stats')
+def api_stats():
+    # 1. Measure Real CPU (Non-blocking)
+    cpu_usage = psutil.cpu_percent(interval=None) 
+    
+    # 2. Get Real Database Counts
+    try:
+        stats = SystemStats.objects.first()
+        
+        if stats:
+            real_scans = stats.total_scans
+            real_threats = stats.threats_blocked
+            log_msg = f"System Optimal. Active Threads: {psutil.cpu_count()}"
+        else:
+            # Initialize if empty
+            new_stats = SystemStats(total_scans=0, threats_blocked=0)
+            new_stats.save()
+            real_scans = 0
+            real_threats = 0
+            log_msg = "Database Initialized."
+            
+    except Exception as e:
+        real_scans = 0
+        real_threats = 0
+        log_msg = "Database Offline - Reconnecting..."
+
+    return jsonify({
+        "scans": real_scans,
+        "threats": real_threats,
+        "server_load": cpu_usage,
+        "log": log_msg
+    })
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

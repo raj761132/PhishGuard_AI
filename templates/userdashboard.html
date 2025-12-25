@@ -2,184 +2,1186 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PhishGuard AI | User Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- Bootstrap + Icons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard AI - Defense Node</title>
+    
+    <!-- CSS Libraries -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-<body class="bg-light">
-
-<div class="container-fluid p-4">
-
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4>Dashboard Overview</h4>
-            <small class="text-muted">Real-time phishing intelligence</small>
-        </div>
-        <div class="text-end">
-            <strong>{{ current_user.full_name or current_user.email }}</strong><br>
-            <small class="text-muted">{{ current_user.role|capitalize }}</small>
-        </div>
-    </div>
-
-    <!-- SCANNER -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h5>Analyze Suspicious URL</h5>
-            <input id="scanUrl" class="form-control mb-3" placeholder="https://example.com">
-            <button class="btn btn-primary" onclick="scanUrl()">
-                <i class="fas fa-search"></i> Scan URL
-            </button>
-            <div id="scanStatus" class="mt-3"></div>
-        </div>
-    </div>
-
-    <!-- RESULTS -->
-    <div id="resultSection" class="row g-4 d-none">
-
-        <!-- FINAL VERDICT -->
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h6>Final Verdict</h6>
-                    <h3 id="finalVerdict"></h3>
-                    <p>Risk Level: <strong id="riskLevel"></strong></p>
-                    <p>Score: <strong id="riskScore"></strong></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ML -->
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h6>ML Prediction</h6>
-                    <p id="mlPrediction"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- IP & LOCATION -->
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h6>IP & Hosting</h6>
-                    <p><strong>IP:</strong> <span id="ipAddr"></span></p>
-                    <p><strong>Country:</strong> <span id="country"></span></p>
-                    <p><strong>ISP:</strong> <span id="isp"></span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- SSL -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h6>SSL Analysis</h6>
-                    <p><strong>Risk:</strong> <span id="sslRisk"></span></p>
-                    <p><strong>Reason:</strong> <span id="sslReason"></span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- URL + BRAND -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h6>URL & Brand Analysis</h6>
-                    <p><strong>URL Risk:</strong> <span id="urlRisk"></span></p>
-                    <p><strong>Brand Impersonation:</strong> <span id="brandResult"></span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- SIGNALS -->
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h6>Threat Signals</h6>
-                    <ul id="signalsList" class="mb-0"></ul>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-</div>
-
-<script>
-function scanUrl() {
-    const url = document.getElementById("scanUrl").value.trim();
-    const status = document.getElementById("scanStatus");
-
-    if (!url) {
-        status.innerHTML = "<div class='alert alert-warning'>Enter a URL</div>";
-        return;
-    }
-
-    status.innerHTML = "<div class='text-muted'>Analyzing...</div>";
-
-    fetch("/api/scan-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.error) {
-            status.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-            return;
+    <style>
+        :root {
+            --primary-dark: #0f172a;
+            --secondary-dark: #1e293b;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --text-light: #f8fafc;
         }
 
-        status.innerHTML = "";
-        document.getElementById("resultSection").classList.remove("d-none");
+        body {
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
 
-        /* Core verdict */
-        document.getElementById("finalVerdict").innerText = data.final_verdict;
-        document.getElementById("riskLevel").innerText = data.risk_level;
-        document.getElementById("riskScore").innerText = data.score;
+        /* --- NEW HEADER STYLES --- */
+        .top-navbar {
+            background: linear-gradient(90deg, #000428, #004e92);
+            height: 60px;
+            padding: 0 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 1000;
+        }
 
-        /* ML */
-        document.getElementById("mlPrediction").innerText =
-            `${data.ml.prediction} (${data.ml.confidence}%)`;
+        .logo {
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
 
-        /* IP */
-        document.getElementById("ipAddr").innerText = data.ip?.ip || "Unknown";
-        document.getElementById("country").innerText = data.ip?.country || "Unknown";
-        document.getElementById("isp").innerText = data.ip?.isp || "Unknown";
+        /* NOTIFICATION DROPDOWN */
+        .notif-box {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 320px;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1001;
+            color: #333;
+            overflow: hidden;
+        }
 
-        /* SSL */
-        document.getElementById("sslRisk").innerText = data.ssl?.risk || "N/A";
-        document.getElementById("sslReason").innerText = data.ssl?.reason || "N/A";
+        .notif-box ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
 
-        /* URL + Brand */
-        document.getElementById("urlRisk").innerText =
-            data.url_analysis?.risk || "N/A";
+        .notif-box li {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        
+        .notif-box li:hover {
+            background-color: #f8f9fa;
+        }
 
-        document.getElementById("brandResult").innerText =
-            data.brand?.impersonation
-                ? `Yes (${data.brand.brand})`
-                : "No";
+        .notif-box li:last-child {
+            border-bottom: none;
+        }
+        
+        /* Ensure dropdown toggle area is relative */
+        .nav-right {
+            position: relative;
+        }
 
-        /* Signals */
-        const signals = document.getElementById("signalsList");
-        signals.innerHTML = "";
-        data.signals.forEach(sig => {
-            const li = document.createElement("li");
-            li.textContent = sig;
-            signals.appendChild(li);
+        /* --- DASHBOARD STYLES --- */
+
+        /* Main Container */
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: radial-gradient(circle at center, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
+        }
+
+        .dashboard-card {
+            width: 100%;
+            max-width: 900px;
+            background: var(--secondary-dark);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .hero-section {
+            padding: 2rem;
+            background: linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9)), url('https://img.freepik.com/free-vector/digital-global-connection-network-technology-background_1017-23324.jpg');
+            background-size: cover;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Tabs */
+        .nav-tabs {
+            border-bottom: 1px solid #334155;
+            background: #0f172a;
+        }
+        
+        .nav-tabs .nav-link {
+            color: #94a3b8;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--accent-cyan);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: white;
+            background: var(--secondary-dark);
+            border-bottom: 2px solid var(--accent-cyan);
+        }
+
+        /* Inputs */
+        .form-control, .input-group-text {
+            background-color: #f8fafc;
+            border: none;
+            padding: 1rem;
+        }
+
+        /* Textarea specific style for dark mode */
+        textarea.form-control {
+            resize: none;
+            min-height: 120px;
+        }
+
+        .btn-analyze {
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            color: white;
+            font-weight: bold;
+            border: none;
+            transition: transform 0.2s;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(6, 182, 212, 0.4);
+            color: white;
+        }
+
+        /* Test Data Box */
+        .test-data-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .test-item {
+            font-size: 0.85rem;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #ccc;
+        }
+
+        .test-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Footer */
+        .status-footer {
+            background: #0f172a;
+            padding: 0.8rem 1.5rem;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: #64748b;
+            border-top: 1px solid #1e293b;
+        }
+
+        .status-dot {
+            height: 8px;
+            width: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        /* Modal & Map */
+        .modal-content {
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .report-header {
+            background: #1e293b;
+            color: white;
+            border-bottom: 4px solid var(--accent-cyan);
+        }
+
+        #liveThreatMap {
+            height: 100%; 
+            min-height: 250px;
+            width: 100%;
+            background: #e2e8f0;
+        }
+
+        .map-overlay-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.85);
+            color: white;
+            padding: 8px 12px;
+            z-index: 1000;
+        }
+
+        .data-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        .data-value {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* Print Styles */
+        #printable-report {
+            display: none;
+        }
+
+        @media print {
+            body > *:not(#printable-report) {
+                display: none !important;
+            }
+
+            body {
+                background-color: white !important;
+                height: auto;
+                display: block;
+            }
+
+            #printable-report, #printable-report * {
+                visibility: visible;
+                color: black !important;
+            }
+            
+            #printable-report {
+                display: block !important;
+                position: relative;
+                width: 100%;
+                background: white;
+                padding: 0;
+                margin: 0;
+                left: auto;
+                top: auto;
+            }
+            
+            .report-page {
+                border: 2px solid #000;
+                padding: 30px;
+                min-height: 95vh;
+                position: relative;
+                page-break-after: always;
+            }
+
+            .report-header-strip {
+                border-bottom: 3px solid #000;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+            }
+
+            .report-section {
+                margin-bottom: 30px;
+                page-break-inside: avoid;
+            }
+
+            .report-section h4 {
+                background: #eee;
+                padding: 5px 10px;
+                border-left: 5px solid #000;
+                margin-bottom: 15px;
+                font-weight: bold;
+                font-size: 14pt;
+            }
+
+            .report-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .report-table td {
+                padding: 8px;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .report-table td:first-child {
+                font-weight: bold;
+                width: 30%;
+                background: #f9f9f9;
+            }
+
+            .verdict-box {
+                border: 2px solid #000;
+                padding: 15px;
+                text-align: center;
+                margin: 20px 0;
+                background: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .signature-box {
+                margin-top: 80px;
+                display: flex;
+                justify-content: space-around;
+                page-break-inside: avoid;
+            }
+
+            .sig-line {
+                border-top: 1px solid #000;
+                width: 200px;
+                padding-top: 5px;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NEW TOP NAVBAR -->
+    <nav class="top-navbar d-flex justify-content-between align-items-center">
+        <div class="logo">
+            <i class="fas fa-shield-alt me-2"></i> PhishGuard AI
+        </div>
+
+        <div class="d-flex align-items-center nav-right">
+
+            <!-- Notification Button -->
+            <button class="btn text-white me-3 position-relative" onclick="toggleNotif()">
+                <i class="fas fa-bell fa-lg"></i>
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                    <span class="visually-hidden">New alerts</span>
+                </span>
+            </button>
+
+            <!-- Notification Dropdown -->
+            <div class="notif-box" id="notifBox">
+                <ul>
+                    <li>
+                        <i class="fas fa-building text-primary"></i>
+                        <div>
+                            <strong>System Update</strong>
+                            <div class="small text-muted">New organization registration pending</div>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-triangle-exclamation text-danger"></i>
+                        <div>
+                            <strong>Alert</strong>
+                            <div class="small text-muted">High-risk phishing URL detected</div>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-chart-line text-success"></i>
+                        <div>
+                            <strong>Report Ready</strong>
+                            <div class="small text-muted">Daily scan report generated</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Logout -->
+            <a href="/logout" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-sign-out-alt me-1"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        
+        <div class="dashboard-card">
+            
+            <div class="hero-section">
+                <h3 class="fw-bold mb-1">Operational Intelligence</h3>
+                <p class="mb-0 text-white-50">Enter target vectors for forensic analysis and threat validation.</p>
+            </div>
+
+            <ul class="nav nav-tabs nav-fill" id="scanTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="url-tab" data-bs-toggle="tab" data-bs-target="#url-panel" type="button">
+                        <i class="fa-solid fa-globe me-2"></i> URL / Domain
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="qr-tab" data-bs-toggle="tab" data-bs-target="#qr-panel" type="button">
+                        <i class="fa-solid fa-qrcode me-2"></i> QR Forensic
+                    </button>
+                </li>
+                <!-- NEW TAB: SMS/Mail -->
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-panel" type="button">
+                        <i class="fa-solid fa-comment-dots me-2"></i> SMS / Mail Scan
+                    </button>
+                </li>
+            </ul>
+
+            <div class="p-5"> 
+                <div class="tab-content" id="scanTabsContent">
+                    
+                    <!-- URL PANEL -->
+                    <div class="tab-pane fade show active" id="url-panel" role="tabpanel">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-10">
+                                <label class="form-label fw-bold text-uppercase text-secondary small">Target Identifier</label>
+                                <div class="input-group input-group-lg shadow-sm">
+                                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                    <input id="urlInput" type="text" class="form-control border-start-0" placeholder="Paste your link here (e.g. login-secure-update.com)">
+                                    <button class="btn btn-analyze px-4" onclick="scanUrl()">
+                                        INITIATE SCAN
+                                    </button>
+                                </div>
+                                <div class="mt-3 d-flex gap-3 text-muted small justify-content-center">
+                                    <span><i class="fa-solid fa-check-circle text-success me-1"></i> Real-time DB</span>
+                                    <span><i class="fa-solid fa-check-circle text-success me-1"></i> AI Heuristics</span>
+                                    <span><i class="fa-solid fa-check-circle text-success me-1"></i> SSL Validation</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR PANEL -->
+                    <div class="tab-pane fade" id="qr-panel" role="tabpanel">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="text-center p-5 rounded-3 border border-secondary" style="border-style: dashed !important; background: rgba(255,255,255,0.05);" id="qr-drop-zone" onclick="document.getElementById('qrInputFile').click()">
+                                    <div class="mb-3">
+                                        <i class="fa-solid fa-file-import fa-3x text-secondary"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-white">Upload QR Payload</h6>
+                                    <p class="text-muted small mb-0">Click to select image or drag file here</p>
+                                    <input type="file" id="qrInputFile" accept="image/*" class="d-none" onchange="handleQrUpload(this)">
+                                </div>
+                                <div id="qr-result-msg" class="mt-3 text-center font-monospace small text-info"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW TEXT/SMS PANEL -->
+                    <div class="tab-pane fade" id="text-panel" role="tabpanel">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-10">
+                                <label class="form-label fw-bold text-uppercase text-secondary small">Message Body / SMS Text</label>
+                                <div class="shadow-sm">
+                                    <textarea id="textInput" class="form-control" placeholder="Paste the suspicious email or SMS text here for NLP analysis..."></textarea>
+                                </div>
+                                <div class="d-grid mt-3">
+                                    <button class="btn btn-analyze py-2" onclick="scanText()">
+                                        <i class="fa-solid fa-microchip me-2"></i> ANALYZE TEXT CONTENT
+                                    </button>
+                                </div>
+
+                                <!-- Inline Result Container -->
+                                <div id="textScanResult" class="mt-4" style="display: none;">
+                                    <!-- Content injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="scanStatus" class="mt-4 text-center"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <footer class="status-footer d-flex justify-content-between align-items-center">
+        <div>
+            <span class="status-dot"></span> SYSTEM ONLINE
+            <span class="mx-2">|</span>
+            THREAT LEVEL: <span class="text-warning fw-bold">ELEVATED</span>
+        </div>
+        <div class="d-none d-md-block">
+            <i class="fa-solid fa-server me-2"></i> NODE: AP-SOUTH-1
+        </div>
+    </footer>
+
+    <!-- Report Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-0 shadow">
+                
+                <div class="modal-header report-header">
+                    <div>
+                        <h5 class="modal-title font-monospace fw-bold">
+                            <i class="fa-solid fa-file-shield me-2"></i> THREAT_REPORT_<span id="reportId"></span>
+                        </h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body bg-light p-4" id="printArea">
+                    
+                    <div class="row mb-4">
+                        
+                        <div class="col-md-8">
+                            <div class="card border-0 border-start border-4 border-dark h-100 shadow-sm rounded-0">
+                                <div class="card-body">
+                                    <h6 class="text-secondary text-uppercase fw-bold small">Analysis Verdict</h6>
+                                    <h2 id="finalVerdict" class="fw-bold mb-0 display-6">--</h2>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="data-label">Risk Level</div>
+                                            <div id="riskLevel" class="fs-5 fw-bold">--</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="data-label">Risk Score</div>
+                                            <div id="riskScore" class="fs-5 fw-bold">--</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card map-card border-0 shadow-sm h-100 rounded-0 overflow-hidden position-relative">
+                                <div id="liveThreatMap"></div>
+                                
+                                <div class="map-overlay-info">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="small text-white-50" style="font-size: 0.65rem;">ORIGIN COUNTRY</div>
+                                            <div id="geoCountry" class="fw-bold">--</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="small text-white-50" style="font-size: 0.65rem;">HOST IP</div>
+                                            <div id="geoIp" class="font-monospace">--</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-0 h-100">
+                                <div class="card-header bg-white fw-bold border-bottom">
+                                    <i class="fa-solid fa-server me-2 text-secondary"></i> Infrastructure Data
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <div class="data-label">ISP / Hosting Organization</div>
+                                            <div id="isp" class="data-value">--</div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="data-label">SSL Certificate Status</div>
+                                            <div class="d-flex justify-content-between">
+                                                <strong id="sslRisk">--</strong>
+                                            </div>
+                                            <small id="sslReason" class="text-muted">--</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-0 h-100">
+                                <div class="card-header bg-white fw-bold border-bottom">
+                                    <i class="fa-solid fa-bug me-2 text-secondary"></i> Threat Forensics
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="data-label">Brand Impersonation</div>
+                                        <div id="brandResult" class="data-value">--</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="data-label">URL Pattern Analysis</div>
+                                        <div id="urlRisk" class="data-value">--</div>
+                                    </div>
+                                    
+                                    <div class="mt-4 p-3 bg-light border border-danger border-start-4">
+                                        <div class="data-label text-danger mb-2">Detected Signals</div>
+                                        <ul id="signalsList" class="mb-0 ps-3 small text-secondary">
+                                            <li>Pending scan...</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-white">
+                    <button type="button" class="btn btn-outline-secondary rounded-1" data-bs-dismiss="modal">Close</button>
+                    <!-- REPORT BUTTON (Hidden by default, shown if threat found) -->
+                    <button type="button" id="btnReportAdmin" onclick="reportToAdmin()" class="btn btn-danger" style="display: none;">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>Report to Cyber Cell
+                    </button>
+                    <button type="button" onclick="generateAndPrintPDF()" class="btn btn-primary">
+                            Download Report
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Printable Area -->
+    <div id="printable-report">
+        <div class="report-page">
+            <div class="report-header-strip">
+                <div>
+                    <h2 style="margin:0; font-weight:bold;">CYBER DEFENSE COMMAND</h2>
+                    <div style="font-size: 10pt;">Ministry of Electronics & Information Technology</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 14pt; font-weight: bold;">THREAT ASSESSMENT REPORT</div>
+                    <div style="font-size: 10pt;">Report ID: <span id="pdf-id"></span></div>
+                    <div style="font-size: 10pt;">Date: <span id="pdf-date"></span></div>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <h4>I. Executive Summary</h4>
+                <div class="verdict-box">
+                    <div style="font-size: 10pt; text-transform: uppercase;">Final Analysis Verdict</div>
+                    <h1 style="margin: 10px 0; font-size: 24pt;" id="pdf-verdict">--</h1>
+                    <div>Risk Score: <span id="pdf-score">--</span></div>
+                </div>
+                <p style="margin-top: 15px; font-size: 11pt;">
+                    <strong>Recommendation:</strong> <span id="pdf-action">--</span>
+                </p>
+            </div>
+
+            <div class="report-section">
+                <h4>II. Target Acquisition Data</h4>
+                <table class="report-table">
+                    <tr>
+                        <td>Target Identifier (URL):</td>
+                        <td id="pdf-url" style="font-family: monospace;">--</td>
+                    </tr>
+                    <tr>
+                        <td>Origin IP Address:</td>
+                        <td id="pdf-ip">--</td>
+                    </tr>
+                    <tr>
+                        <td>Geo-Location:</td>
+                        <td id="pdf-geo">--</td>
+                    </tr>
+                    <tr>
+                        <td>ISP / Network Host:</td>
+                        <td id="pdf-isp">--</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="report-section">
+                <h4>III. Technical Forensics</h4>
+                <table class="report-table">
+                    <tr>
+                        <td>SSL/TLS Certificate:</td>
+                        <td id="pdf-ssl">--</td>
+                    </tr>
+                    <tr>
+                        <td>Brand Impersonation:</td>
+                        <td id="pdf-brand">--</td>
+                    </tr>
+                </table>
+                
+                <div style="margin-top: 10px;">
+                    <strong>Detected Signals & Anomalies:</strong>
+                    <ul id="pdf-evidence" style="font-size: 11pt; margin-top: 5px;">
+                    </ul>
+                </div>
+            </div>
+
+            <div class="signature-box">
+                <div style="text-align: center;">
+                    <div class="sig-line">Analyst Signature</div>
+                    <div>Agent Smith</div>
+                </div>
+                <div style="text-align: center;">
+                    <div class="sig-line">Supervising Officer</div>
+                    <div>Command HQ</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px; font-size: 8pt; color: #666;">
+                Generated by PhishGuard AI Node-Secure-01
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JS Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        // --- NOTIFICATION TOGGLE ---
+        function toggleNotif() {
+            var box = document.getElementById("notifBox");
+            if (box.style.display === "block") {
+                box.style.display = "none";
+            } else {
+                box.style.display = "block";
+            }
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.fa-bell') && !event.target.closest('button')) {
+                var dropdowns = document.getElementsByClassName("notif-box");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.style.display === "block") {
+                        openDropdown.style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // --- HARDCODED TEST DATA (SMS/MAIL) ---
+        const textDatabase = [
+            { text: "URGENT: Your bank account has been locked due to suspicious activity. Click here to verify identity: http://secure-bank-verify.com", type: "Phishing" },
+            { text: "CONGRATS! You are the lucky winner of an iPhone 15 Pro. Claim your prize now! text WIN to 55555", type: "Phishing" },
+            { text: "Netflix: Your payment failed. Please update your payment information immediately to avoid suspension.", type: "Phishing" },
+            { text: "IRS Final Notice: Lawsuit filed against you. Call 800-555-0199 immediately to resolve this matter.", type: "Phishing" },
+            { text: "Amazon: We noticed a login from a new device. If this wasn't you, click the link to secure your account.", type: "Phishing" },
+            { text: "Hey, are we still on for dinner tonight at 7 PM?", type: "Safe" },
+            { text: "Your verification code is 849201. Do not share this code with anyone. Valid for 5 minutes.", type: "Safe" },
+            { text: "Meeting Reminder: Weekly team sync is starting in 15 minutes via Zoom.", type: "Safe" },
+            { text: "Mom: Can you pick up some milk on your way home? Love you.", type: "Safe" },
+            { text: "Your package #TRACK123456789 has been delivered to your front porch.", type: "Safe" }
+        ];
+
+        // --- GLOBAL MAP VARIABLES ---
+        let map;
+        let marker;
+        let currentScanData = null; // Store scan result for reporting
+
+        // Initialize Map on Page Load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize the map, but we must update size when modal opens
+            map = L.map('liveThreatMap').setView([20, 0], 2);
+
+            // Use "Positron" (Light Gray) tiles to match government theme
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Fix map gray box issue when modal opens
+            // Wrapped in a check to ensure element exists
+            const reportModalEl = document.getElementById('reportModal');
+            if (reportModalEl) {
+                reportModalEl.addEventListener('shown.bs.modal', event => {
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 10);
+                });
+            }
         });
-    })
-    .catch(() => {
-        status.innerHTML = "<div class='alert alert-danger'>Scan failed</div>";
-    });
-}
-</script>
 
+        // 1. Core Scan Function (REAL API)
+        async function scanUrl() {
+            const inputElement = document.getElementById("urlInput");
+            if (!inputElement) {
+                console.error("URL Input not found");
+                return;
+            }
+
+            const url = inputElement.value.trim();
+            const status = document.getElementById("scanStatus");
+            const reportModal = new bootstrap.Modal(document.getElementById('reportModal'));
+            const btnReport = document.getElementById("btnReportAdmin");
+
+            // Reset button state
+            if(btnReport) btnReport.style.display = 'none';
+
+            if (!url) {
+                status.innerHTML = "<div class='alert alert-warning rounded-0'>System Alert: Input cannot be empty.</div>";
+                return;
+            }
+
+            // Simulate Loading
+            status.innerHTML = "<div class='text-info fw-bold'><i class='fas fa-spinner fa-spin me-2'></i> Accessing National Threat Database... Please wait.</div>";
+
+            try {
+                // REPLACE WITH YOUR ACTUAL BACKEND ENDPOINT
+                const response = await fetch('/api/scan-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                currentScanData = data; // Store data for reporting
+
+                // Process Real Data
+                status.innerHTML = ""; // Clear loading status
+
+                // --- MAP UPDATE ---
+                if (data.ip && data.ip.lat && data.ip.lon) {
+                    map.setView([data.ip.lat, data.ip.lon], 4); 
+                    if (marker) map.removeLayer(marker);
+                    marker = L.marker([data.ip.lat, data.ip.lon]).addTo(map)
+                        .bindPopup(`<b>Target Location</b><br>${data.ip.country_full || 'Unknown'}`)
+                        .openPopup();
+                }
+
+                // --- UPDATE MODAL TEXT ---
+                updateModalUI(data);
+
+                // Show Popup
+                reportModal.show();
+
+            } catch (error) {
+                console.error("Scan Error:", error);
+                status.innerHTML = `<div class='alert alert-danger rounded-0'>System Error: ${error.message}. Ensure your backend ML model is running.</div>`;
+            }
+        }
+
+        // 1.5 Scan Text Function (Manual Mock)
+        function scanText() {
+            const input = document.getElementById('textInput').value.trim();
+            const status = document.getElementById("scanStatus");
+            const resultDiv = document.getElementById("textScanResult");
+
+            if(!input) {
+                alert("Input cannot be empty.");
+                return;
+            }
+
+            // Reset previous results
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+
+            status.innerHTML = "<div class='text-info fw-bold'><i class='fas fa-spinner fa-spin me-2'></i> Analyzing text patterns...</div>";
+
+            setTimeout(() => {
+                status.innerHTML = "";
+                
+                // MOCK LOGIC: Check against database or keywords
+                let verdict = "SAFE CONTENT";
+                let riskLevel = "Low";
+                let score = 10;
+                let signals = ["No malicious keywords found", "Grammar analysis: Natural"];
+                let isPhish = false;
+                let verdictClass = "text-success";
+                let borderClass = "border-success";
+
+                const match = textDatabase.find(d => d.text === input);
+                if(match && match.type === "Phishing") {
+                    isPhish = true;
+                } else if (!match) {
+                    const triggers = ["urgent", "verify", "locked", "winner", "claim", "irs", "suspended"];
+                    const lowerInput = input.toLowerCase();
+                    if(triggers.some(t => lowerInput.includes(t))) {
+                        isPhish = true;
+                    }
+                }
+
+                if(isPhish) {
+                    verdict = "PHISHING ATTEMPT";
+                    riskLevel = "CRITICAL";
+                    score = 95;
+                    signals = ["Urgency detected", "Suspicious link structure", "Social engineering pattern"];
+                    verdictClass = "text-danger";
+                    borderClass = "border-danger";
+                }
+
+                // Construct Inline HTML
+                let signalsHtml = signals.map(s => `<li>${s}</li>`).join('');
+                let reportBtnHtml = isPhish ? 
+                    `<button class="btn btn-danger btn-sm mt-3" onclick="reportToAdminFromText()">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>Report to Cyber Cell
+                    </button>` : '';
+
+                let html = `
+                    <div class="card bg-dark border ${borderClass} shadow-sm">
+                        <div class="card-body">
+                            <h4 class="${verdictClass} fw-bold mb-3">${verdict}</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="small text-muted">Risk Level</div>
+                                    <div class="fs-5 text-white fw-bold">${riskLevel}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="small text-muted">AI Score</div>
+                                    <div class="fs-5 text-white fw-bold">${score}/100</div>
+                                </div>
+                            </div>
+                            <hr class="border-secondary">
+                            <div class="small text-muted mb-2">Analysis Signals:</div>
+                            <ul class="text-light small ps-3 mb-0">
+                                ${signalsHtml}
+                            </ul>
+                            ${reportBtnHtml}
+                        </div>
+                    </div>
+                `;
+
+                resultDiv.innerHTML = html;
+                resultDiv.style.display = 'block';
+                
+                // Update global currentScanData for reporting
+                currentScanData = {
+                    final_verdict: verdict,
+                    risk_level: riskLevel,
+                    score: score + "/100",
+                    ip: { country: "N/A (Text Scan)", ip: "Hidden", isp: "N/A" },
+                    ssl: { risk: "N/A", reason: "Text Analysis" },
+                    url_analysis: { risk: isPhish ? "Malicious Intent" : "Clean" },
+                    brand: { impersonation: isPhish, brand: isPhish ? "Unknown/Generic" : null },
+                    signals: signals
+                };
+
+            }, 1500);
+        }
+        
+        // Helper for the inline report button
+        function reportToAdminFromText() {
+             reportToAdmin();
+        }
+
+        // Shared function to update modal UI
+        function updateModalUI(data) {
+            const verdictEl = document.getElementById("finalVerdict");
+            const btnReport = document.getElementById("btnReportAdmin");
+            let isSuspicious = false;
+            
+            if (verdictEl) {
+                verdictEl.innerText = data.final_verdict || "UNKNOWN";
+                
+                if(data.final_verdict && (data.final_verdict.toUpperCase().includes("PHISH") || data.final_verdict.toUpperCase().includes("MALICIOUS") || data.final_verdict.toUpperCase().includes("SUSPICIOUS") || data.final_verdict.toUpperCase().includes("ATTEMPT"))) {
+                    verdictEl.className = "fw-bold mb-0 text-danger display-6";
+                    isSuspicious = true;
+                } else if(data.final_verdict && (data.final_verdict.includes("SAFE") || data.final_verdict.includes("CLEAN"))) {
+                    verdictEl.className = "fw-bold mb-0 text-success display-6";
+                } else {
+                    verdictEl.className = "fw-bold mb-0 text-warning display-6";
+                }
+            }
+
+            // Show Report Button if Suspicious
+            if(btnReport) {
+                btnReport.style.display = isSuspicious ? "inline-block" : "none";
+                btnReport.disabled = false;
+                btnReport.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Report to Cyber Cell';
+            }
+
+            if(document.getElementById("riskLevel")) document.getElementById("riskLevel").innerText = data.risk_level || "--";
+            if(document.getElementById("riskScore")) document.getElementById("riskScore").innerText = data.score || "--";
+            if(document.getElementById("reportId")) document.getElementById("reportId").innerText = Math.floor(Math.random() * 100000); 
+
+            if(document.getElementById("geoCountry")) document.getElementById("geoCountry").innerText = data.ip?.country || "N/A";
+            if(document.getElementById("geoIp")) document.getElementById("geoIp").innerText = data.ip?.ip || "N/A";
+            if(document.getElementById("isp")) document.getElementById("isp").innerText = data.ip?.isp || "N/A";
+            if(document.getElementById("sslRisk")) document.getElementById("sslRisk").innerText = data.ssl?.risk || "N/A";
+            if(document.getElementById("sslReason")) document.getElementById("sslReason").innerText = data.ssl?.reason || "";
+            if(document.getElementById("urlRisk")) document.getElementById("urlRisk").innerText = data.url_analysis?.risk || "N/A";
+            if(document.getElementById("brandResult")) document.getElementById("brandResult").innerText = data.brand?.impersonation ? `Yes (${data.brand.brand || 'Detected'})` : "No";
+
+            // Signals
+            const signals = document.getElementById("signalsList");
+            if (signals) {
+                signals.innerHTML = "";
+                if (data.signals && Array.isArray(data.signals) && data.signals.length > 0) {
+                    data.signals.forEach(sig => {
+                        const li = document.createElement("li");
+                        li.textContent = sig;
+                        signals.appendChild(li);
+                    });
+                } else {
+                        const li = document.createElement("li");
+                        li.textContent = "No specific signals detected.";
+                        signals.appendChild(li);
+                }
+            }
+        }
+
+        // 2. Report to Admin Function
+        async function reportToAdmin() {
+            if (!currentScanData) return;
+            // Check if we are reporting from text panel (button exists inside result div) or modal
+            // Simple way: check if text panel is active
+            let btn;
+            const textPanel = document.getElementById("text-panel");
+            if (textPanel && textPanel.classList.contains("active")) {
+                 // For text panel, we might need to find the button inside the dynamically created HTML
+                 // But since reportToAdminFromText calls this, we can just grab the btnReportAdmin if it exists, or find the dynamic one.
+                 // Actually, let's just grab the button from the modal if active, or generic. 
+                 // Since the inline button calls this, we need a reference.
+                 // Let's simplify: pass the button element or find it.
+                 // For now, let's just use a generic selector or check visibility.
+                 // The modal button has ID btnReportAdmin. The inline one doesn't have an ID in the generated HTML above.
+                 // Let's fix the inline button to have a class we can target or pass 'this'
+                 btn = document.querySelector("#textScanResult button"); 
+            } else {
+                 btn = document.getElementById("btnReportAdmin");
+            }
+            
+            if(btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+                btn.disabled = true;
+            }
+
+            // Determine Target
+            let targetVal = "";
+            if(document.getElementById('text-panel').classList.contains('active')) {
+                targetVal = document.getElementById("textInput").value.substring(0, 50) + "...";
+            } else {
+                targetVal = document.getElementById("urlInput").value;
+            }
+
+            try {
+                // Try to send to backend
+                const response = await fetch('/api/report-case', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target: targetVal,
+                        data: currentScanData,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    const res = await response.json();
+                    alert("✅ SUCCESS: Case filed with Cyber Authority.\nCase ID: " + (res.case_id || "Auto-Generated"));
+                    if(btn) btn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Reported';
+                } else {
+                    // Fallback for demo/preview if backend is missing
+                    console.warn("Backend not reachable, simulating success for demo.");
+                    alert("✅ (DEMO MODE) Report sent to Admin Dashboard.\n\nNote: Implement /api/report-case in app.py to make this real.");
+                    if(btn) btn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Reported (Demo)';
+                }
+            } catch (e) {
+                // Likely network error or 404 in preview
+                console.warn("Backend error:", e);
+                alert("✅ (DEMO MODE) Report sent to Admin Dashboard.\n\nNote: Implement /api/report-case in app.py to make this real.");
+                if(btn) btn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Reported (Demo)';
+            }
+        }
+
+        // 3. Download Report Logic
+        function generateAndPrintPDF() {
+            try {
+                // Setup Date
+                const now = new Date();
+                const dateEl = document.getElementById('pdf-date');
+                if(dateEl) dateEl.innerText = now.toLocaleString();
+                
+                const idEl = document.getElementById('pdf-id');
+                if(idEl) idEl.innerText = "RPT-" + Math.floor(Math.random() * 99999);
+
+                // Transfer Data Helper
+                function safeTransfer(sourceId, destId) {
+                    const source = document.getElementById(sourceId);
+                    const dest = document.getElementById(destId);
+                    const value = source ? (source.value || source.innerText) : "N/A";
+                    if (dest) dest.innerText = value;
+                }
+
+                // Map Data
+                safeTransfer('urlInput', 'pdf-url');
+                safeTransfer('riskScore', 'pdf-score');
+                safeTransfer('finalVerdict', 'pdf-verdict');
+                safeTransfer('geoIp', 'pdf-ip');
+                safeTransfer('geoCountry', 'pdf-geo');
+                safeTransfer('isp', 'pdf-isp');
+                safeTransfer('sslRisk', 'pdf-ssl');
+                safeTransfer('brandResult', 'pdf-brand');
+
+                // Action Logic
+                const verdictEl = document.getElementById('finalVerdict');
+                if (verdictEl) {
+                    const verdictText = verdictEl.innerText.toLowerCase();
+                    const actionDest = document.getElementById('pdf-action');
+                    if(actionDest) {
+                        if(verdictText.includes("phishing") || verdictText.includes("malicious")) {
+                            actionDest.innerText = "IMMEDIATE BLOCK ADVISED. Threat confirmed.";
+                            actionDest.style.color = "red";
+                        } else {
+                            actionDest.innerText = "NO ACTION REQUIRED. Domain appears legitimate.";
+                            actionDest.style.color = "green";
+                        }
+                    }
+                }
+
+                // Evidence Transfer
+                const signalsList = document.getElementById('signalsList');
+                const pdfEvidence = document.getElementById('pdf-evidence');
+                if (signalsList && pdfEvidence) {
+                    pdfEvidence.innerHTML = signalsList.innerHTML;
+                }
+
+                // Print
+                window.print();
+
+            } catch (err) {
+                console.error(err);
+                alert("Error generating report");
+            }
+        }
+
+        // 4. QR Handler Placeholder
+        function handleQrUpload(input) {
+            if(input.files && input.files[0]) {
+                const msg = document.getElementById('qr-result-msg');
+                if(msg) msg.innerText = "Analyzing QR Payload... (This is a demo)";
+                
+                setTimeout(() => {
+                    if(msg) msg.innerText = "QR Decoded: https://suspicious-bank-login.com";
+                    const urlInput = document.getElementById('urlInput');
+                    if(urlInput) urlInput.value = "https://suspicious-bank-login.com";
+                    
+                    // Switch tab
+                    const urlTabEl = document.getElementById('url-tab');
+                    if(urlTabEl) {
+                        const urlTab = new bootstrap.Tab(urlTabEl);
+                        urlTab.show();
+                    }
+                    scanUrl();
+                }, 1000);
+            }
+        }
+    </script>
 </body>
 </html>

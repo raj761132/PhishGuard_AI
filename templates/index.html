@@ -278,22 +278,66 @@
         </div>
     </section>
 
-    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
-        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
-            <div class="mb-6 md:mb-0 text-center md:text-left">
-                <div class="flex items-center justify-center md:justify-start space-x-2 mb-2 text-white">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    <span class="font-bold tracking-wide">N.P.D.S</span>
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 relative">
+                
+                <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-6 md:mb-0 text-center md:text-left">
+                        <div class="flex items-center justify-center md:justify-start space-x-2 mb-2 text-white">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span class="font-bold tracking-wide">N.P.D.S</span>
+                        </div>
+                        <p class="text-sm">© 2025 PhishGuard AI. All rights reserved.</p>
+                        <p class="text-xs mt-2 text-slate-500">Project demonstration portal showcasing AI-driven phishing detection.</p>
+                    </div>
+                    
+                    <div class="flex space-x-8 text-sm font-medium">
+                        <button onclick="openFooterModal('privacyModal')" class="hover:text-white transition focus:outline-none">Privacy Policy</button>
+                        <button onclick="openFooterModal('termsModal')" class="hover:text-white transition focus:outline-none">Terms of Service</button>
+                        <button onclick="openFooterModal('contactModal')" class="hover:text-white transition focus:outline-none">Contact Support</button>
+                    </div>
                 </div>
-                <p class="text-sm">© 2025 PhishGuard AI. All rights reserved.</p>
-                <p class="text-xs mt-2 text-slate-500">Project demonstration portal showcasing AI-driven phishing detection and monitoring capabilities..</p>
-            </div>
-            <div class="flex space-x-8 text-sm font-medium">
-                <a href="#" class="hover:text-white transition">Privacy Policy</a>
-                <a href="#" class="hover:text-white transition">Terms of Service</a>
-                <a href="#" class="hover:text-white transition">Contact Support</a>
-            </div>
-        </div>
+
+                <div id="liveStatsWindow" class="hidden fixed bottom-5 right-5 w-80 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden z-50 text-xs font-mono">
+                    <div class="bg-slate-800 px-4 py-2 flex justify-between items-center border-b border-slate-700">
+                        <div class="flex items-center space-x-2 text-green-400">
+                            <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                            <span class="font-bold tracking-wider">LIVE_MONITOR_V2.1</span>
+                        </div>
+                        <button onclick="toggleLiveStats()" class="text-slate-500 hover:text-white transition">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-4 space-y-4 text-slate-300">
+                        
+                        <div class="flex justify-between items-end border-b border-slate-800 pb-2">
+                            <span>GLOBAL_SCANS:</span>
+                            <span id="scanCounter" class="text-blue-400 font-bold text-lg">0</span>
+                        </div>
+
+                        <div class="flex justify-between items-end border-b border-slate-800 pb-2">
+                            <span>THREATS_BLOCKED:</span>
+                            <span id="threatCounter" class="text-red-500 font-bold text-lg">0</span>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span>SERVER_LOAD:</span>
+                                <span id="serverLoad" class="text-yellow-400">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-1.5">
+                                <div id="loadBar" class="bg-yellow-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-black/50 p-2 rounded border border-slate-800 h-16 overflow-hidden">
+                            <p id="activityLog" class="text-green-500/80 transition-colors duration-200">> System Initialized...</p>
+                        </div>
+                    </div>
+                </div>
     </footer>
 
 
@@ -390,69 +434,210 @@
         </div>
     </div>
 
+    <div id="privacyModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center backdrop-blur-sm footer-modal" onclick="closeFooterModals(event)">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg relative overflow-hidden transform scale-100 transition-transform">
+        <div class="bg-slate-50 p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800">Privacy & Data Policy</h3>
+            <button onclick="closeFooterModals(null, true)" class="text-gray-400 hover:text-red-500 transition">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6 text-sm text-gray-600 space-y-4 overflow-y-auto max-h-[60vh]">
+            <p><strong class="text-slate-900">1. Data Collection:</strong> We collect URLs submitted for scanning to improve our AI datasets. No personal browsing history is tracked.</p>
+            <p><strong class="text-slate-900">2. Anonymity:</strong> All reports submitted by Citizens are anonymized before being shared with organizations.</p>
+            <p><strong class="text-slate-900">3. Government Compliance:</strong> This project adheres to the National Cyber Security Framework (NCSF) guidelines for data handling.</p>
+            <div class="bg-blue-50 p-3 rounded border border-blue-100 text-xs">
+                Note: As this is a Hackathon Project, no real data is permanently stored on external servers.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="termsModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center backdrop-blur-sm footer-modal" onclick="closeFooterModals(event)">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg relative overflow-hidden">
+        <div class="bg-slate-50 p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800">Terms of Service</h3>
+            <button onclick="closeFooterModals(null, true)" class="text-gray-400 hover:text-red-500 transition">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6 text-sm text-gray-600 space-y-4">
+            <p>By using the National Phishing Defense System (NPDS), you agree to the following:</p>
+            <ul class="list-disc pl-5 space-y-2">
+                <li>You will not use this tool to test or validate your own phishing kits (Malicious intent).</li>
+                <li>Automated scraping of our threat database is prohibited without API authorization.</li>
+                <li>The "Risk Score" provided is an AI estimation and does not constitute legal proof of malice.</li>
+            </ul>
+            <p class="text-xs text-gray-400 mt-4">Last Updated: Hackathon 2025</p>
+        </div>
+    </div>
+</div>
+
+<div id="contactModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center backdrop-blur-sm footer-modal" onclick="closeFooterModals(event)">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md relative overflow-hidden">
+        <div class="bg-slate-50 p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800">Contact Support</h3>
+            <button onclick="closeFooterModals(null, true)" class="text-gray-400 hover:text-red-500 transition">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="flex items-center space-x-4">
+                <div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-envelope"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Email Us</p>
+                    <p class="font-bold text-slate-800">support@cyberportal.gov</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-phone"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Helpline (24/7)</p>
+                    <p class="font-bold text-slate-800">1800-CYBER-SAFE</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i class="fa-brands fa-github"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Project Repo</p>
+                    <a href="#" class="font-bold text-blue-600 hover:underline">github.com/phishguard-project</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script>
-    // --- 1. MODAL LOGIC (Keep this the same) ---
-    const loginModal = document.getElementById('loginModal');
-    const registerModal = document.getElementById('registerModal');
-    const statsWindow = document.getElementById('liveStatsWindow');
+    // 1. Debug Start
+    console.log(">>> SCRIPT STARTED: Waiting for DOM...");
 
-    function openLoginModal() { loginModal.classList.remove('hidden'); }
-    function openRegisterModal() { registerModal.classList.remove('hidden'); }
-    function closeModals() {
-        loginModal.classList.add('hidden');
-        registerModal.classList.add('hidden');
-    }
-    
-    // Close on click outside
-    window.onclick = function(event) {
-        if (event.target == loginModal || event.target == registerModal) closeModals();
-        if (!statsWindow.contains(event.target) && !event.target.closest('[onclick="toggleLiveStats()"]')) {
-            statsWindow.classList.add('hidden');
-        }
-    }
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log(">>> DOM LOADED: initializing elements...");
 
-    function toggleLiveStats() {
-        statsWindow.classList.toggle('hidden');
-        // If opening, ensure we fetch data immediately
-        if (!statsWindow.classList.contains('hidden')) {
-            fetchRealData(); 
-        }
-    }
+        // --- SELECT ELEMENTS SAFELY ---
+        const loginModal = document.getElementById('loginModal');
+        const registerModal = document.getElementById('registerModal');
+        const statsWindow = document.getElementById('liveStatsWindow');
+        
+        // --- MODAL FUNCTIONS ---
+        window.openLoginModal = function() { 
+            if(loginModal) loginModal.classList.remove('hidden'); 
+        };
 
-    // --- 2. REAL DATA FETCHING LOGIC ---
-    async function fetchRealData() {
-        try {
-            // Call the Python API
-            const response = await fetch('/api/stats');
-            const data = await response.json();
+        window.openRegisterModal = function() { 
+            if(registerModal) registerModal.classList.remove('hidden'); 
+        };
 
-            // Update the UI with Database/System values
-            document.getElementById('scanCounter').innerText = data.scans.toLocaleString();
-            document.getElementById('threatCounter').innerText = data.threats.toLocaleString();
+        window.closeModals = function() {
+            if(loginModal) loginModal.classList.add('hidden');
+            if(registerModal) registerModal.classList.add('hidden');
+        };
+
+        window.toggleLiveStats = function() {
+            if (statsWindow) {
+                statsWindow.classList.toggle('hidden');
+                // Fetch data immediately if opening
+                if (!statsWindow.classList.contains('hidden')) {
+                    fetchRealData(); 
+                }
+            } else {
+                console.error("Error: 'liveStatsWindow' ID not found in HTML");
+            }
+        };
+        
+        // --- FOOTER MODAL LOGIC ---
+        window.openFooterModal = function(modalId) {
+            // Close all footer modals first
+            document.querySelectorAll('.footer-modal').forEach(m => m.classList.add('hidden'));
             
-            // Update Real Server Load
-            document.getElementById('serverLoad').innerText = data.server_load + "%";
-            document.getElementById('loadBar').style.width = data.server_load + "%";
-            
-            // Update Log
-            const logBox = document.getElementById('activityLog');
-            logBox.innerText = "> " + data.log;
-            
-            // Flash effect
-            logBox.classList.add('text-white');
-            setTimeout(() => logBox.classList.remove('text-white'), 200);
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+            } else {
+                console.warn(`Footer Modal ID '${modalId}' not found.`);
+            }
+        };
 
-        } catch (error) {
-            console.error("Error connecting to Python backend:", error);
-            document.getElementById('activityLog').innerText = "> Connection Lost. Reconnecting...";
+        window.closeFooterModals = function(event, force = false) {
+            if (force || (event && event.target.classList.contains('footer-modal'))) {
+                document.querySelectorAll('.footer-modal').forEach(m => m.classList.add('hidden'));
+            }
+        };
+
+        // --- CLICK OUTSIDE LISTENER ---
+        window.onclick = function(event) {
+            // Close Login/Register Modals
+            if (event.target == loginModal || event.target == registerModal) {
+                closeModals();
+            }
+            
+            // Close Stats Window (Safe Check)
+            if (statsWindow && !statsWindow.classList.contains('hidden')) {
+                // If click is NOT inside the window AND NOT on the toggle button
+                if (!statsWindow.contains(event.target) && !event.target.closest('[onclick="toggleLiveStats()"]')) {
+                    statsWindow.classList.add('hidden');
+                }
+            }
+
+            // Close Footer Modals (Safe Check)
+            if (event.target.classList.contains('footer-modal')) {
+                closeFooterModals(event);
+            }
+        };
+
+        // --- REAL DATA FETCHING ---
+        async function fetchRealData() {
+            try {
+                // Debug: Check if we are actually calling the API
+                // console.log(">>> Fetching /api/stats..."); 
+
+                const response = await fetch('/api/stats');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Update UI (Only if elements exist)
+                const scanEl = document.getElementById('scanCounter');
+                if(scanEl) scanEl.innerText = data.scans ? data.scans.toLocaleString() : "0";
+
+                const threatEl = document.getElementById('threatCounter');
+                if(threatEl) threatEl.innerText = data.threats ? data.threats.toLocaleString() : "0";
+                
+                const loadEl = document.getElementById('serverLoad');
+                if(loadEl) loadEl.innerText = data.server_load + "%";
+
+                const barEl = document.getElementById('loadBar');
+                if(barEl) barEl.style.width = data.server_load + "%";
+                
+                // Log Update
+                const logBox = document.getElementById('activityLog');
+                if(logBox) {
+                    logBox.innerText = "> " + (data.log || "System Active");
+                    logBox.classList.add('text-white');
+                    setTimeout(() => logBox.classList.remove('text-white'), 200);
+                }
+
+            } catch (error) {
+                console.error(">>> FETCH ERROR:", error);
+                const logBox = document.getElementById('activityLog');
+                if(logBox) logBox.innerText = "> Connection Lost. Retrying...";
+            }
         }
-    }
 
-    // Poll the server every 2 seconds
-    setInterval(fetchRealData, 2000);
-    
-    // Initial fetch
-    fetchRealData();
-</script>
+        // --- START ---
+        console.log(">>> SYSTEM ONLINE: Starting Polling...");
+        fetchRealData(); // Run once immediately
+        setInterval(fetchRealData, 2000); // Run every 2 seconds
+      });
+    </script>
 </body>
 </html>

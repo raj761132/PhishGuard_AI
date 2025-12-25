@@ -1,19 +1,9 @@
-from services.final_verdict import final_verdict
+from services.org_monitor import monitor_brand
 
-urls = [
-    "https://gietuerp.xnxx/",
-    "rbi.co.in"
-]
+alerts = monitor_brand(
+    brand_domain="paypal.com",
+    brand_keywords=["paypal", "pay-pal"]
+)
 
-for url in urls:
-    print("\n==============================")
-    result = final_verdict(url)
-
-    print("URL:", result["url"])
-    print("Final Verdict:", result["final_verdict"])
-    print("Risk Level:", result["risk_level"])
-    print("Score:", result["score"])
-
-    print("Evidence:")
-    for s in result["signals"]:
-        print(" -", s)
+for alert in alerts:
+    print(alert["suspicious_domain"], alert["risk_level"], alert["risk_score"])

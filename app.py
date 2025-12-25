@@ -1,16 +1,26 @@
 import os
 import random
 import datetime
+<<<<<<< HEAD
 import psutil
 import requests
 import socket
 import uuid  # Added for generating Case IDs
 from urllib.parse import urlparse
+=======
+import socket
+import datetime
+import socket
+
+from flask_login import UserMixin
+from mongoengine import Document, StringField, BooleanField
+from mongoengine import StringField
+>>>>>>> 032d40b28ea50efd0478bb8f2882f5af5a0fe468
 
 from dotenv import load_dotenv
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, flash, session, jsonify
+    url_for, flash, session, jsonify, abort
 )
 from flask_login import (
     LoginManager, UserMixin, login_user,
@@ -20,6 +30,7 @@ from flask_mongoengine import MongoEngine
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+<<<<<<< HEAD
 
 # Import your existing ML logic
 # Ensure this file exists in services/final_verdict.py
@@ -42,23 +53,24 @@ except ImportError:
 # ==========================================
 # 1. LOAD ENV & APP INIT
 # ==========================================
+=======
+from services.final_verdict import final_verdict
+from routes.org_routes.org_bp import org_bp
+>>>>>>> 032d40b28ea50efd0478bb8f2882f5af5a0fe468
 
 load_dotenv()
 
 app = Flask(__name__)
+<<<<<<< HEAD
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key")
-
-# ==========================================
-# 2. FILE UPLOAD CONFIG
-# ==========================================
+=======
+app.register_blueprint(org_bp)
+app.secret_key = os.getenv("SECRET_KEY")
+>>>>>>> 032d40b28ea50efd0478bb8f2882f5af5a0fe468
 
 UPLOAD_FOLDER = "static/uploads/kyc_docs"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# ==========================================
-# 3. MAIL CONFIG
-# ==========================================
 
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
@@ -69,17 +81,22 @@ app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_USERNAME")
 
 mail = Mail(app)
 
-# ==========================================
-# 4. MONGODB ATLAS CONFIG
-# ==========================================
-
 app.config["MONGODB_SETTINGS"] = {
     "host": os.getenv("MONGO_URI", "mongodb://localhost:27017/phishguard") # Added default local fallback
 }
 
 db = MongoEngine()
 db.init_app(app)
+ 
+with app.app_context():
+    try:
+        db.connection.server_info()
+        print("✅ MongoDB connected successfully")
+    except Exception as e:
+        print("❌ MongoDB connection failed")
+        print(e)
 
+<<<<<<< HEAD
 # TEST CONNECTION SAFELY
 with app.app_context():
     try:
@@ -92,35 +109,39 @@ with app.app_context():
 # ==========================================
 # 5. DB MODELS
 # ==========================================
+=======
+#USER MODEL
+>>>>>>> 032d40b28ea50efd0478bb8f2882f5af5a0fe468
 
-class User(UserMixin, db.Document):
+class User(db.Document, UserMixin):
     meta = {"collection": "users", "strict": False}
 
+    # Common (ALL users)
     email = db.StringField(required=True, unique=True)
     password_hash = db.StringField(required=True)
     role = db.StringField(required=True)  # citizen | org | admin
-
     created_at = db.DateTimeField(default=datetime.datetime.utcnow)
 
     # Verification / approval (used for org/admin only)
     is_verified = db.BooleanField(default=True)
     is_approved = db.BooleanField(default=False)
 
-    # Citizen
+    # Citizen fields
     full_name = db.StringField()
     phone = db.StringField()
 
-    # Organization
+    # Organization fields
     org_name = db.StringField()
     category = db.StringField()
     cin = db.StringField()
     designation = db.StringField()
+    domain = db.StringField()
 
     # Documents
     auth_doc_path = db.StringField()
     incorp_doc_path = db.StringField()
 
-    # OTP (ORG ONLY)
+    # OTP (org only)
     otp_code = db.StringField()
     otp_expiry = db.DateTimeField()
 
@@ -198,6 +219,13 @@ login_manager.login_view = "login_citizen"
 def load_user(user_id):
     return User.objects(pk=user_id).first()
 
+def verify_domain(domain):
+    try:
+        socket.gethostbyname(domain)
+        return True
+    except:
+        return False
+
 # ==========================================
 # 8. ROUTES
 # ==========================================
@@ -210,29 +238,71 @@ def home():
 
 @app.route("/register-citizen", methods=["GET", "POST"])
 def register_citizen():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role = 'citizen'
 
-        if User.objects(email=email).first():
-            flash("Email already registered. Please login.", "danger")
-            return redirect(url_for("login_citizen"))
+        existing_user = User.objects(email=email).first()
+        if existing_user:
+            flash('Email already registered. Please login.', 'danger')
+            return redirect(url_for('login_citizen'))
 
         User(
             email=email,
             password_hash=generate_password_hash(password),
-            role="citizen",
-            full_name=request.form.get("full_name"),
-            phone=request.form.get("phone"),
-            is_verified=True
-        ).save()
+            role=role,
+            otp_code=otp,
+            otp_expiry=expiry,
+            is_verified=False,
+            full_name=request.form.get('full_name'),
+            phone=request.form.get('phone')
+        )
 
-        flash("Registration successful. Please login.", "success")
-        return redirect(url_for("login_citizen"))
+        try:
+            new_user.save()
+            
+            msg = Message('Your OTP Verification Code', 
+                          sender='noreply@cyberportal.gov', 
+                          recipients=[email])
+            msg.body = f"Your Code: {otp}"
+            mail.send(msg)
+            
+            session['email_to_verify'] = email
+            flash('Registration successful! Please verify OTP.', 'info')
+            return redirect(url_for('verify_otp'))
+            
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'danger')
+            return redirect(url_for('register_citizen'))
 
     return render_template("citizen-register.html")
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp():
+    if request.method == 'POST':
+        entered_otp = request.form.get('otp')
+        email = session.get('email_to_verify')
+
+        if not email:
+            flash('Session expired. Please register again.', 'danger')
+            return redirect(url_for('register_citizen'))
+
+        user = User.objects(email=email).first()
+
+        if user and user.otp_code == entered_otp:
+            user.is_verified = True
+            user.otp_code = None
+            user.save()
+            session.pop('email_to_verify', None)
+            flash('Account Verified! Please login.', 'success')
+            return redirect(url_for('login_citizen'))
+        else:
+            flash('Invalid or Expired OTP', 'danger')
+
+    return render_template('otp-verify.html')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login_citizen():
     if request.method == "POST":
         email = request.form.get("email")
@@ -266,6 +336,7 @@ def send_otp_org():
     session["org_otp"] = otp
     session["org_email"] = email
 
+<<<<<<< HEAD
     # Note: Ensure you have configured SMTP environment variables for this to work
     try:
         msg = Message("Organization OTP", recipients=[email])
@@ -275,6 +346,17 @@ def send_otp_org():
     except Exception as e:
         print(f"Mail Error: {e}")
         return jsonify({"success": False, "message": "Failed to send OTP. Check logs."})
+=======
+    msg = Message("Organization OTP", recipients=[email])
+    msg.body = f"OTP: {otp}"
+    mail.send(msg)
+    
+    flash(
+    "Application submitted successfully. You will receive an email once approved.",
+    "success"
+        )  
+    return jsonify({"success": True})
+>>>>>>> 032d40b28ea50efd0478bb8f2882f5af5a0fe468
 
 @app.route("/verify-otp-org", methods=["POST"])
 def verify_otp_org():
@@ -292,8 +374,14 @@ def register_org_submit():
     if not session.get("org_verified"):
         return jsonify({"error": "OTP required"}), 400
 
+    domain = request.form.get("domain")
+    if not domain or not verify_domain(domain):
+        return jsonify({"error": "Invalid domain"}), 400
+
     auth_file = request.files.get("auth_letter")
     incorp_file = request.files.get("incorp_cert")
+
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
     auth_path = incorp_path = None
 
@@ -313,6 +401,7 @@ def register_org_submit():
         category=request.form.get("category"),
         cin=request.form.get("cin"),
         designation=request.form.get("designation"),
+        domain=domain,
         auth_doc_path=auth_path,
         incorp_doc_path=incorp_path,
         is_verified=True,
@@ -327,48 +416,101 @@ def register_org_submit():
 @app.route("/official-login", methods=["GET", "POST"])
 def login_official():
     if request.method == "POST":
-        user = User.objects(email=request.form.get("email"), role="org").first()
+        email = request.form.get("email")
+        password = request.form.get("password")
 
-        if not user or not check_password_hash(user.password_hash, request.form.get("password")):
-            flash("Invalid credentials.", "danger")
+        #Only organization accounts allowed here
+        user = User.objects(email=email, role="org").first()
+
+        if not user or not check_password_hash(user.password_hash, password):
+            flash("Invalid email or password.", "danger")
             return redirect(url_for("login_official"))
 
+        #Block until admin approval
         if not user.is_approved:
-            flash("Account pending admin approval.", "info")
+            flash(
+                "Your organization account is pending CERT-IN approval. "
+                "You will receive an email once approved.",
+                "warning"
+            )
             return redirect(url_for("login_official"))
 
+        #Login allowed
         login_user(user)
+        flash("Login successful.", "success")
         return redirect(url_for("org_dashboard"))
 
     return render_template("login-official.html")
-
-# ---------------- ADMIN LOGIN ------------------
-
-@app.route("/admin-login", methods=["GET", "POST"])
-def login_admin():
-    if request.method == "POST":
-        user = User.objects(email=request.form.get("email"), role="admin").first()
-
-        if not user or not check_password_hash(user.password_hash, request.form.get("password")):
-            flash("Invalid admin credentials.", "danger")
-            return redirect(url_for("login_admin"))
-
-        login_user(user)
-        return redirect(url_for("dashboard"))
-
-    return render_template("login-admin.html")
-
-# ---------------- DASHBOARDS ------------------
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
     if current_user.role == "org":
         return redirect(url_for("org_dashboard"))
+<<<<<<< HEAD
     # Pass user to template for header display
     return render_template("userdashboard.html", current_user=current_user)
+=======
+    return render_template("userdashboard.html")
 
-@app.route("/ORG-dashboard")
+@app.route("/api/scan-url", methods=["POST"])
+@login_required
+def scan_url_api():
+    data = request.get_json()
+    url = data.get("url", "").strip()
+
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+
+    try:
+        report = final_verdict(url)
+
+        return jsonify({
+            # Core
+            "url": report["url"],
+            "final_verdict": report["final_verdict"],
+            "risk_level": report["risk_level"],
+            "score": report["score"],
+
+            # ML
+            "ml": {
+                "prediction": report["ml"]["prediction"],
+                "confidence": report["ml"]["confidence"]
+            },
+
+            # SSL
+            "ssl": report.get("ssl"),
+
+            # IP & Hosting
+            "ip": report.get("ip"),
+
+            # URL structure
+            "url_analysis": report.get("url_analysis"),
+
+            # Brand check
+            "brand": report.get("brand"),
+
+            # Signals
+            "signals": report["signals"]
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": "Analysis failed",
+            "details": str(e)
+        }), 500
+        
+#Domain Verification of Organization
+@app.route("/verify-domain", methods=["POST"])
+def verify_domain_api():
+    data = request.get_json()
+    domain = data.get("domain")
+
+    return jsonify(valid=verify_domain(domain))
+
+>>>>>>> 032d40b28ea50efd0478bb8f2882f5af5a0fe468
+
+@app.route("/org-dashboard")
 @login_required
 def org_dashboard():
     return render_template("organizationdashboard.html")
@@ -379,6 +521,7 @@ def logout():
     logout_user()
     return redirect(url_for("home"))
 
+<<<<<<< HEAD
 # ==========================================
 # 9. SCANNING API (UPDATED WITH REPORTING)
 # ==========================================
@@ -524,5 +667,7 @@ def api_stats():
         "log": log_msg
     })
 
+=======
+>>>>>>> 032d40b28ea50efd0478bb8f2882f5af5a0fe468
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

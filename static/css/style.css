@@ -1,0 +1,186 @@
+/* =========================================
+   1. VARIABLES & RESET
+   ========================================= */
+:root {
+    /* Brand Colors */
+    --gov-blue: #003366;       /* Primary Theme */
+    --gov-gold: #c5a94d;       /* Org/Secondary */
+    --gov-red: #dc3545;        /* Admin/Danger */
+    --gov-green: #198754;      /* Success */
+    
+    /* Layout Dimensions */
+    --sidebar-width: 260px;
+    --header-height: 60px;
+    
+    /* Backgrounds */
+    --bg-light: #f4f6f9;
+    --bg-dark: #212529;
+}
+
+body {
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    background-color: var(--bg-light);
+    color: #333;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+a { text-decoration: none; }
+
+/* Font Serif for Headings */
+.font-serif { font-family: 'Merriweather', serif; }
+
+/* =========================================
+   2. UTILITY CLASSES
+   ========================================= */
+/* Borders & Colors */
+.border-citizen { border-top: 5px solid var(--gov-blue) !important; }
+.border-org     { border-top: 5px solid var(--gov-gold) !important; }
+.border-admin   { border-top: 5px solid var(--gov-red) !important; }
+
+.text-primary-gov { color: var(--gov-blue) !important; }
+.bg-primary-gov   { background-color: var(--gov-blue) !important; color: white; }
+
+.cursor-pointer { cursor: pointer; }
+
+/* Animations */
+.animate-fade {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   3. FORMS & INPUTS
+   ========================================= */
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(0, 51, 102, 0.25);
+    border-color: var(--gov-blue);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+.form-control { border-left: none; }
+
+/* Password Strength Meter */
+.password-meter {
+    height: 5px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+.meter-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* =========================================
+   4. LAYOUT: SIDEBAR & DASHBOARD
+   ========================================= */
+.wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+/* Sidebar Styling */
+#sidebar {
+    min-width: var(--sidebar-width);
+    max-width: var(--sidebar-width);
+    background: var(--gov-blue);
+    color: #fff;
+    transition: all 0.3s;
+    min-height: 100vh;
+}
+
+#sidebar.active {
+    margin-left: calc(var(--sidebar-width) * -1);
+}
+
+/* Sidebar Header */
+#sidebar .sidebar-header {
+    padding: 20px;
+    background: rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Sidebar Links */
+#sidebar ul.components { padding: 20px 0; }
+
+#sidebar ul li a {
+    padding: 15px 25px;
+    font-size: 1rem;
+    display: block;
+    color: rgba(255,255,255,0.8);
+    border-left: 4px solid transparent;
+}
+
+#sidebar ul li a:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+}
+
+#sidebar ul li.active > a {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border-left: 4px solid #fff;
+}
+
+/* Main Content Area */
+#content {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top Navigation Bar inside Dashboard */
+.top-bar {
+    background: #212529; 
+    color: #fff; 
+    font-size: 0.85rem; 
+    padding: 5px 20px;
+    display: flex; 
+    align-items: center; 
+}
+
+/* =========================================
+   5. ROLE-BASED THEMES (Dynamic Switching)
+   ========================================= */
+
+/* Theme: Organization (Gold/Dark) */
+body.theme-org #sidebar {
+    background: #1a1a1a; /* Dark Grey */
+    border-right: 3px solid var(--gov-gold);
+}
+body.theme-org #sidebar ul li.active > a {
+    border-left-color: var(--gov-gold);
+    color: var(--gov-gold);
+}
+
+/* Theme: Admin (Red/Dark) */
+body.theme-admin #sidebar {
+    background: #5a0000; /* Dark Red */
+    background-image: repeating-linear-gradient(45deg, #600000, #600000 10px, #500000 10px, #500000 20px);
+}
+body.theme-admin #sidebar ul li.active > a {
+    border-left-color: #ff6b6b;
+}
+
+/* =========================================
+   6. RESPONSIVE (Mobile)
+   ========================================= */
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: calc(var(--sidebar-width) * -1);
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+}

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< HEAD
     <title>PhishGuard AI - Defense Node</title>
     
     <!-- CSS Libraries -->
@@ -372,11 +373,111 @@
                 margin-bottom: 5px;
             }
         }
+=======
+    <title>PhishGuard AI | User Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --sidebar-bg: #0f172a;
+            --accent-color: #0d6efd;
+            --bg-light: #f1f5f9;
+            --card-border: rgba(0,0,0,0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            overflow-x: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .wrapper { display: flex; width: 100%; align-items: stretch; }
+        .sidebar {
+            min-width: 250px; max-width: 250px; background: var(--sidebar-bg); color: #fff;
+            min-height: 100vh; position: fixed; z-index: 999;
+        }
+        .sidebar .logo {
+            padding: 24px 20px; font-size: 1.4rem; font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.1); letter-spacing: -0.5px;
+        }
+        .sidebar ul { padding: 0; list-style: none; margin-top: 20px; }
+        .sidebar ul li a {
+            padding: 14px 25px; font-size: 0.95rem; display: block; color: #94a3b8;
+            text-decoration: none; transition: 0.3s; font-weight: 500; border-left: 3px solid transparent;
+        }
+        .sidebar ul li a:hover, .sidebar ul li a.active {
+            color: #fff; background: rgba(255,255,255,0.05); border-left-color: var(--accent-color);
+        }
+        .sidebar ul li a i { width: 25px; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { width: 100%; margin-left: 250px; padding: 30px; }
+
+        /* HEADER */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .dashboard-header h4 { font-weight: 700; color: #1e293b; margin: 0; }
+        .user-profile { display: flex; align-items: center; gap: 10px; background: white; padding: 8px 15px; border-radius: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* --- NEW SCANNER SECTION (The Big Change) --- */
+        .scanner-card {
+            background: white; border-radius: 12px; border: 1px solid var(--card-border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow: hidden; height: 100%;
+        }
+        
+        /* Custom Tabs */
+        .nav-pills-custom { padding: 15px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; gap: 10px; }
+        .nav-pills-custom .nav-link {
+            color: #64748b; font-weight: 600; font-size: 0.9rem; border-radius: 8px; padding: 10px 20px;
+        }
+        .nav-pills-custom .nav-link.active {
+            background-color: white; color: var(--accent-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+        }
+        .nav-pills-custom .nav-link i { margin-right: 8px; }
+
+        /* Input Area */
+        .scan-body { padding: 40px; text-align: center; }
+        .scan-input {
+            padding: 15px; border-radius: 8px; border: 2px solid #e2e8f0;
+            font-size: 1.1rem; transition: 0.3s;
+        }
+        .scan-input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); }
+        
+        .scan-btn-lg {
+            padding: 12px 40px; font-weight: 600; font-size: 1rem; border-radius: 8px; margin-top: 20px;
+        }
+
+        /* --- STATS SIDEBAR --- */
+        .stats-card {
+            background: white; border-radius: 12px; padding: 20px;
+            border: 1px solid var(--card-border); margin-bottom: 20px;
+        }
+        .stat-item { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
+        .stat-val { font-weight: 700; color: #0f172a; }
+
+        /* --- TABLE --- */
+        .recent-table-card {
+            background: white; border-radius: 12px; border: 1px solid var(--card-border); overflow: hidden;
+        }
+        .table thead th {
+            background: #f8fafc; color: #475569; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0;
+        }
+        .status-badge {
+            padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600;
+        }
+        .bg-phish { background: #fef2f2; color: #ef4444; }
+        .bg-safe { background: #f0fdf4; color: #16a34a; }
+>>>>>>> 0809c800094ce22e3a6b9035c6b64701ff587a7c
     </style>
 </head>
 
 <body>
 
+<<<<<<< HEAD
     <!-- NEW TOP NAVBAR -->
     <nav class="top-navbar d-flex justify-content-between align-items-center">
         <div class="logo">
@@ -418,8 +519,52 @@
                         </div>
                     </li>
                 </ul>
-            </div>
+=======
+<div class="wrapper">
 
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="fas fa-shield-alt text-primary"></i> PhishGuard AI
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active"><i class="fas fa-layer-group"></i> Dashboard</a></li>
+                <li><a href="#"><i class="fas fa-radar"></i> Threat Map</a></li>
+                <li><a href="#"><i class="fas fa-history"></i> Activity Log</a></li>
+                <li><a href="#"><i class="fas fa-file-contract"></i> Reports</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                <li style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.05);">
+                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="dashboard-header">
+            <div>
+                <h4>Dashboard Overview</h4>
+                <p class="text-muted small mb-0">Monitor threats and analyze URLs in real-time.</p>
+            </div>
+            <div class="user-profile">
+                <div class="text-end me-2" style="line-height: 1.2;">
+                    <span class="d-block fw-bold small">Amit Sharma</span>
+                    <span class="d-block text-muted" style="font-size: 0.7rem;">Verified Citizen</span>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Amit+Sharma&background=0d6efd&color=fff" class="rounded-circle" width="35">
+            </div>
+        </div>
+
+        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4" role="alert" style="border-left: 4px solid #f59e0b !important;">
+            <i class="fas fa-exclamation-triangle me-3 fs-5"></i>
+            <div>
+                <strong>High Alert:</strong> Increased phishing activity detected in "Banking" sector this week.
+>>>>>>> 0809c800094ce22e3a6b9035c6b64701ff587a7c
+            </div>
+        </div>
+
+<<<<<<< HEAD
             <!-- Logout -->
             <a href="/logout" class="btn btn-outline-light btn-sm">
                 <i class="fas fa-sign-out-alt me-1"></i> Logout
@@ -476,9 +621,45 @@
                                     <span><i class="fa-solid fa-check-circle text-success me-1"></i> SSL Validation</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+=======
+        <div class="row g-4">
+            
+            <div class="col-lg-8">
+                <div class="scanner-card h-100">
+                    <ul class="nav nav-pills nav-pills-custom" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pills-url-tab" data-bs-toggle="pill" data-bs-target="#pills-url" type="button">
+                                <i class="fas fa-globe"></i> URL Scan
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-email-tab" data-bs-toggle="pill" data-bs-target="#pills-email" type="button">
+                                <i class="fas fa-envelope"></i> Email Body
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-sms-tab" data-bs-toggle="pill" data-bs-target="#pills-sms" type="button">
+                                <i class="fas fa-comment-alt"></i> SMS / Text
+                            </button>
+                        </li>
+                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-domain-tab" data-bs-toggle="pill" data-bs-target="#pills-domain" type="button">
+                                <i class="fas fa-shield-virus"></i> Reputation
+                            </button>
+                        </li>
+                    </ul>
 
+                    <div class="tab-content scan-body" id="pills-tabContent">
+                        
+                        <div class="tab-pane fade show active" id="pills-url" role="tabpanel">
+                            <h5 class="mb-3 text-secondary">Analyze Suspicious Link</h5>
+                            <input type="text" class="form-control scan-input mb-2" placeholder="Paste URL here (e.g., http://suspicious-bank.com)">
+                            <small class="text-muted d-block mb-3">Checks against blacklist, heuristic analysis, and domain age.</small>
+                            <button class="btn btn-primary scan-btn-lg"><i class="fas fa-search me-2"></i> Scan URL</button>
+>>>>>>> 0809c800094ce22e3a6b9035c6b64701ff587a7c
+                        </div>
+
+<<<<<<< HEAD
                     <!-- QR PANEL -->
                     <div class="tab-pane fade" id="qr-panel" role="tabpanel">
                         <div class="row justify-content-center">
@@ -493,9 +674,16 @@
                                 </div>
                                 <div id="qr-result-msg" class="mt-3 text-center font-monospace small text-info"></div>
                             </div>
+=======
+                        <div class="tab-pane fade" id="pills-email" role="tabpanel">
+                            <h5 class="mb-3 text-secondary">Analyze Email Content</h5>
+                            <textarea class="form-control scan-input mb-2" rows="4" placeholder="Paste the full email content here..."></textarea>
+                            <small class="text-muted d-block mb-3">NLP analysis for urgency, threats, and malicious patterns.</small>
+                            <button class="btn btn-primary scan-btn-lg"><i class="fas fa-microscope me-2"></i> Analyze Email</button>
+>>>>>>> 0809c800094ce22e3a6b9035c6b64701ff587a7c
                         </div>
-                    </div>
 
+<<<<<<< HEAD
                     <!-- NEW TEXT/SMS PANEL -->
                     <div class="tab-pane fade" id="text-panel" role="tabpanel">
                         <div class="row justify-content-center">
@@ -518,11 +706,27 @@
                         </div>
                     </div>
 
+=======
+                        <div class="tab-pane fade" id="pills-sms" role="tabpanel">
+                            <h5 class="mb-3 text-secondary">Analyze SMS / Message</h5>
+                            <textarea class="form-control scan-input mb-2" rows="3" placeholder="Paste SMS content..."></textarea>
+                            <button class="btn btn-primary scan-btn-lg"><i class="fas fa-comment-dots me-2"></i> Check SMS</button>
+                        </div>
+
+                         <div class="tab-pane fade" id="pills-domain" role="tabpanel">
+                            <h5 class="mb-3 text-secondary">Check Domain Reputation</h5>
+                            <input type="text" class="form-control scan-input mb-2" placeholder="e.g. google.com">
+                            <button class="btn btn-primary scan-btn-lg"><i class="fas fa-id-card me-2"></i> Get Report</button>
+                        </div>
+
+                    </div>
+>>>>>>> 0809c800094ce22e3a6b9035c6b64701ff587a7c
                 </div>
 
                 <div id="scanStatus" class="mt-4 text-center"></div>
 
             </div>
+<<<<<<< HEAD
         </div>
     </div>
 
@@ -657,10 +861,38 @@
                     </button>
                 </div>
 
+=======
+
+            <div class="col-lg-4">
+                
+                <div class="stats-card">
+                    <h6 class="text-uppercase text-muted fw-bold small mb-3">Your Security Stats</h6>
+                    <div class="stat-item">
+                        <span class="text-muted"><i class="fas fa-search me-2"></i>Total Scans</span>
+                        <span class="stat-val">142</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="text-muted"><i class="fas fa-bug me-2"></i>Threats Found</span>
+                        <span class="stat-val text-danger">12</span>
+                    </div>
+                    <div class="stat-item border-0 pb-0 mb-0">
+                        <span class="text-muted"><i class="fas fa-shield-alt me-2"></i>Safety Score</span>
+                        <span class="stat-val text-success">92%</span>
+                    </div>
+                </div>
+
+                <div class="stats-card bg-primary text-white border-0">
+                    <h5 class="fw-bold mb-2">Report Incident</h5>
+                    <p class="small opacity-75 mb-3">Found a new scam? Report it directly to Cyber Crime authorities.</p>
+                    <button class="btn btn-light btn-sm text-primary fw-bold w-100">File Report Now</button>
+                </div>
+
+>>>>>>> 0809c800094ce22e3a6b9035c6b64701ff587a7c
             </div>
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Hidden Printable Area -->
     <div id="printable-report">
         <div class="report-page">
@@ -744,10 +976,53 @@
             <div style="text-align: center; margin-top: 40px; font-size: 8pt; color: #666;">
                 Generated by PhishGuard AI Node-Secure-01
             </div>
+=======
+        <h5 class="mt-5 mb-3 fw-bold text-dark">Recent Scan History</h5>
+        <div class="recent-table-card">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Target</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Risk Score</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ps-4 fw-bold text-dark">secure-login-hdfc.net</td>
+                        <td>URL</td>
+                        <td class="text-muted small">Today, 10:30 AM</td>
+                        <td><span class="text-danger fw-bold">98%</span></td>
+                        <td><span class="status-badge bg-phish">Phishing</span></td>
+                        <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 fw-bold text-dark">amazon-orders.com</td>
+                        <td>Domain</td>
+                        <td class="text-muted small">Yesterday</td>
+                        <td><span class="text-success fw-bold">5%</span></td>
+                        <td><span class="status-badge bg-safe">Safe</span></td>
+                        <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
+                    </tr>
+                     <tr>
+                        <td class="ps-4 fw-bold text-dark">"Urgent: KYC Pending..."</td>
+                        <td>SMS</td>
+                        <td class="text-muted small">Dec 18</td>
+                        <td><span class="text-danger fw-bold">85%</span></td>
+                        <td><span class="status-badge bg-phish">Suspicious</span></td>
+                        <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
+                    </tr>
+                </tbody>
+            </table>
+>>>>>>> 0809c800094ce22e3a6b9035c6b64701ff587a7c
         </div>
     </div>
 
 
+<<<<<<< HEAD
     <!-- JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -762,6 +1037,9 @@
                 box.style.display = "block";
             }
         }
+=======
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+>>>>>>> 0809c800094ce22e3a6b9035c6b64701ff587a7c
 
         // Close dropdown when clicking outside
         window.onclick = function(event) {
